@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import {AuthType, Infobip} from "@infobip-api/sdk"
 import { UserLoginDto } from './dto/user-login.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -80,6 +81,14 @@ export class UserService {
 
     generateVerificationCode() {
         return phoneToken(4,{type: 'number'})
+    }
+
+    async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
+        return await this.repository.createQueryBuilder("user").where("user.numero = :phoneNumber", {phoneNumber}).getOne()
+    }
+
+    async updateUser(id: number, user: UpdateUserDto, ): Promise<UpdateResult> {
+        return await this.repository.update(id, user)
     }
 
     async sendSMSToUser(payload: SendSmsDto): Promise<any> {

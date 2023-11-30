@@ -17,7 +17,7 @@ export class User {
     @Column({unique: true, nullable: true})
     email: string
 
-    @Column({default: 0})
+    @Column({default: '0'})
     solde: string
 
     @Column()

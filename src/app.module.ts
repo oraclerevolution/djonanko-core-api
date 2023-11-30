@@ -5,6 +5,7 @@ import { HelperModule } from './helper/helper.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TransfertModule } from './transfert/transfert.module';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: true,
     }),
     HelperModule, 
-    UserModule
+    UserModule, TransfertModule
   ],
   controllers: [AppController],
   providers: [AppService],
