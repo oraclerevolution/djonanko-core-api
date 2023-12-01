@@ -33,6 +33,14 @@ export class UserController {
         return await this.userService.getUserByPhoneNumber(phoneNumber)
     }
 
+    @Get('user-balance')
+    async userBalance(
+        @Query('phoneNumber') phoneNumber: string
+    ): Promise<string> {
+        const user = await this.userService.getUserByPhoneNumber(phoneNumber)
+        return user.solde
+    }
+
     @Patch('update-user')
     async updateUser(
         @Body() payload: UpdateUserDto,

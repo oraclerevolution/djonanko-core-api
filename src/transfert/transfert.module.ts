@@ -4,11 +4,13 @@ import { TransfertService } from './transfert.service';
 import { UserModule } from 'src/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transfert } from './entities/transfert.entity';
+import { HistoriquesModule } from 'src/historiques/historiques.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transfert]),
-    UserModule
+    UserModule,
+    HistoriquesModule
   ],
   controllers: [TransfertController],
   providers: [TransfertService]

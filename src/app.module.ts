@@ -6,6 +6,7 @@ import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransfertModule } from './transfert/transfert.module';
+import { HistoriquesModule } from './historiques/historiques.module';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { TransfertModule } from './transfert/transfert.module';
       synchronize: true,
     }),
     HelperModule, 
-    UserModule, TransfertModule
+    UserModule, TransfertModule, HistoriquesModule
   ],
   controllers: [AppController],
   providers: [AppService],
