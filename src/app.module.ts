@@ -7,6 +7,10 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransfertModule } from './transfert/transfert.module';
 import { HistoriquesModule } from './historiques/historiques.module';
+import { MarchandsModule } from './marchands/marchands.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import {join} from "path"
 
 @Module({
   imports: [
@@ -24,8 +28,14 @@ import { HistoriquesModule } from './historiques/historiques.module';
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    MulterModule.register({
+      dest: './uploads',
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+    }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule
   ],
   controllers: [AppController],
   providers: [AppService],
