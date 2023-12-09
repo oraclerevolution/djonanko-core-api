@@ -23,6 +23,7 @@ export class MarchandsService {
         marchand.name = marchands.name;
         marchand.logo = marchands.logo;
         marchand.phoneNumber = marchands.phoneNumber;
+        marchand.categorieId = marchands.categorieId;
         marchand.IsMatriculeExist = marchands.IsMatriculeExist;
         marchand.textIfMatriculeExist = marchands.textIfMatriculeExist;
         marchand.PaymentNumber = marchands.PaymentNumber;
@@ -70,6 +71,22 @@ export class MarchandsService {
         const actualPaymentNumber = parseInt(marchand.PaymentNumber);
         marchand.PaymentNumber = (actualPaymentNumber + 1).toString();
         return await this.repository.save(marchand);
+    }
+
+    /**
+     * Retrieves a list of merchants by category ID.
+     *
+     * @param {string} id - The ID of the category.
+     * @return {Promise<Marchands[]>} - A Promise that resolves to an array of Marchands objects.
+     */
+    async getMarchantsByCategorieId(
+        id: string
+    ): Promise<Marchands[]> {
+        return await this.repository.find({
+            where: {
+                categorieId: id
+            }
+        });
     }
 
     /**

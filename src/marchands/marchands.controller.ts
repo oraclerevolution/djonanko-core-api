@@ -28,6 +28,13 @@ export class MarchandsController {
         return await this.marchandsService.getOne(id);
     }
 
+    @Get('marchands/category')
+    async getMarchantsByCategorieId(
+        @Query('id') id: string
+    ): Promise<Marchands[]> {
+        return await this.marchandsService.getMarchantsByCategorieId(id);
+    }
+
     @Patch('marchand/:id')
     async updateMarchands(
         @Query('id') id: string,

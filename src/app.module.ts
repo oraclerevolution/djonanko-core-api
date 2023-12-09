@@ -11,6 +11,7 @@ import { MarchandsModule } from './marchands/marchands.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import {join} from "path"
+import { CategorieMarchandsModule } from './categorie-marchands/categorie-marchands.module';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import {join} from "path"
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule
   ],
   controllers: [AppController],
   providers: [AppService],
