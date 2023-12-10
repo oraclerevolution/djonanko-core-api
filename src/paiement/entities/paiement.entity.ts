@@ -1,11 +1,11 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { TransactionType } from "../enums/transfer-type.enum";
+import { TransactionType } from "src/transfert/enums/transfer-type.enum";
 
 @Entity({
-    name: 'transfert'
+    name: 'paiement'
 })
 
-export class Transfert {
+export class Paiement {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
@@ -20,6 +20,9 @@ export class Transfert {
 
     @Column({name: 'sender_phone_number'})
     senderPhoneNumber: string;
+
+    @Column({name: 'fees'})
+    fees: string;
 
     @Column({name: 'receiver_phone_number'})
     receiverPhoneNumber: string;

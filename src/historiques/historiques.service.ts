@@ -18,6 +18,7 @@ export class HistoriquesService {
         return await this.repository
             .createQueryBuilder("historique")
             .where("historique.sender = :sender", {sender: id})
+            .limit(6)
             .getMany()
     }
 }
