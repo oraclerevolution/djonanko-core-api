@@ -24,6 +24,9 @@ export class Transfert {
     @Column({name: 'receiver_phone_number'})
     receiverPhoneNumber: string;
 
+    @Column({name: 'fees'})
+    fees: string;
+
     @Column({
         type: 'enum',
         enum: TransactionType,
