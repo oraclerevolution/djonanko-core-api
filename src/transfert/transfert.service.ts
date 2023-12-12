@@ -7,14 +7,16 @@ import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { HistoriquesService } from 'src/historiques/historiques.service';
 import { TransactionType } from 'src/historiques/enums/transaction-type.enum';
+import { CompteCollecteService } from 'src/compte-collecte/compte-collecte.service';
+import { CollectType } from 'src/compte-collecte/enums/collect-type.enum';
 
 @Injectable()
 export class TransfertService {
-
     constructor(
         @InjectRepository(Transfert) private readonly repository: Repository<Transfert>,
         private readonly userService: UserService,
-        private readonly historiqueService: HistoriquesService
+        private readonly historiqueService: HistoriquesService,
+        private readonly compteCollecteService: CompteCollecteService
     ) { }
 
     /**
@@ -59,6 +61,10 @@ export class TransfertService {
                         transactionType: TransactionType.TRANSFERT,
                         amount: amount,
                         icon: 'send'
+                    })
+                    await this.compteCollecteService.createCompteCollect({
+                        amount: getSenderInfos.premium === true ? (parseInt(amount)).toString() : (0.01 * parseInt(amount)).toString(),
+                        collectType: CollectType.FRAIS
                     })
                     return createTransfert
                 }

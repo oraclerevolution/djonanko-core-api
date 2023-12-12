@@ -6,13 +6,16 @@ import { UserService } from 'src/user/user.service';
 import { HistoriquesService } from 'src/historiques/historiques.service';
 import { MakePaiementDto } from './dto/make-paiement.dto';
 import { TransactionType } from 'src/historiques/enums/transaction-type.enum';
+import { CompteCollecteService } from 'src/compte-collecte/compte-collecte.service';
+import { CollectType } from 'src/compte-collecte/enums/collect-type.enum';
 
 @Injectable()
 export class PaiementService {
     constructor(
         @InjectRepository(Paiement) private readonly repository: Repository<Paiement>,
         private readonly userService: UserService,
-        private readonly historiqueService: HistoriquesService
+        private readonly historiqueService: HistoriquesService,
+        private readonly compteCollecteService: CompteCollecteService
     ){}
 
     /**
@@ -55,6 +58,10 @@ export class PaiementService {
                     transactionType: TransactionType.PAIEMENT,
                     amount: amount,
                     icon:'send'
+                })
+                await this.compteCollecteService.createCompteCollect({
+                    amount: getSenderInfos.premium === true ? (0.005 * parseInt(amount)).toString() : (0.01 * parseInt(amount)).toString(),
+                    collectType: CollectType.FRAIS
                 })
                 return createPaiement
             }

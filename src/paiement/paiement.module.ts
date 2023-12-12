@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Paiement } from './entities/paiement.entity';
 import { HistoriquesModule } from 'src/historiques/historiques.module';
 import { UserModule } from 'src/user/user.module';
+import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { UserModule } from 'src/user/user.module';
       Paiement
     ]),
     HistoriquesModule,
-    UserModule
+    UserModule,
+    CompteCollecteModule
   ],
   controllers: [PaiementController],
   providers: [PaiementService]
