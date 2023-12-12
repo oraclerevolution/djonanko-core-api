@@ -25,10 +25,14 @@ export class PaiementService {
         const {senderPhoneNumber, receiverPhoneNumber, amount} = payload;
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverPhoneNumber);
-        const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount));
+        const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
         const paiement = new Paiement();
         paiement.amount = amount;
-        paiement.fees = (0.005 * parseInt(amount)).toString();
+        if(getSenderInfos.premium === true){
+            paiement.fees = (0.005 * parseInt(amount)).toString();
+        }else{
+            paiement.fees = (0.01 * parseInt(amount)).toString();
+        }
         paiement.amountBeforeSending = getSenderInfos.solde;
         paiement.amountAfterSending = (balanceAfterSending).toString();
         paiement.senderPhoneNumber = senderPhoneNumber;
@@ -63,8 +67,13 @@ export class PaiementService {
      * @param {number} amount - The amount for which to calculate the transaction fees.
      * @return {number} - The total amount including the transaction fees.
      */
-    getTransactionFees(amount: number): number{
-        const fees = 0.005 * amount;
-        return amount + fees;
+    getTransactionFees(amount: number, mode: boolean): number{
+        if(mode === true){
+            const fees = 0.005 * amount;
+            return amount + fees;
+        }else{
+            const fees = 0.01 * amount;
+            return amount + fees;
+        }
     }
 }
