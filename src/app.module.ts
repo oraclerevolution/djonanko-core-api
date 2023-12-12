@@ -13,6 +13,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import {join} from "path"
 import { CategorieMarchandsModule } from './categorie-marchands/categorie-marchands.module';
 import { PaiementModule } from './paiement/paiement.module';
+import { CompteCollecteModule } from './compte-collecte/compte-collecte.module';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { PaiementModule } from './paiement/paiement.module';
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule
   ],
   controllers: [AppController],
   providers: [AppService],
