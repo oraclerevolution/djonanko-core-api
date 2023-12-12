@@ -44,6 +44,18 @@ export class User {
     @Column({nullable: true, name: 'moov_money'})
     moovMoney: string
 
+    @Column({nullable: false, default: false})
+    premium: boolean
+
+    @Column({nullable: false, default: 200000})
+    plafonds: number
+
+    @Column({nullable: false, default: 300000, name: 'cumul_mensuel'})
+    cumulMensuel: number
+
+    @Column({nullable: true, default: 300000, name: 'cumul_mensuel_restant'})
+    cumulMensuelRestant: number
+
     @Column({nullable: true})
     referralCode: number
 
