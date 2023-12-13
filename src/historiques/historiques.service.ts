@@ -19,6 +19,7 @@ export class HistoriquesService {
             .createQueryBuilder("historique")
             .where("historique.sender = :sender", {sender: id})
             .limit(6)
+            .orderBy("historique.createdAt", "DESC")
             .getMany()
     }
 }

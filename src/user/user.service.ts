@@ -115,4 +115,21 @@ export class UserService {
         
         return response        
     }
+
+    async getUsersPremiums(): Promise<User[]> {
+        return await this.repository.find({
+            where: {
+                premium: true,
+                premiumActivated: false
+            }
+        })
+    }
+
+    async changePremiumStatus() {
+        return await this.repository.find({
+            where: {
+                premium: true
+            }
+        })
+    }
 }

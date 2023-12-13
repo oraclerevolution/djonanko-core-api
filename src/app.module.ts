@@ -14,6 +14,7 @@ import {join} from "path"
 import { CategorieMarchandsModule } from './categorie-marchands/categorie-marchands.module';
 import { PaiementModule } from './paiement/paiement.module';
 import { CompteCollecteModule } from './compte-collecte/compte-collecte.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CompteCollecteModule } from './compte-collecte/compte-collecte.module';
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    ScheduleModule.forRoot(),
     MulterModule.register({
       dest: './uploads',
     }),

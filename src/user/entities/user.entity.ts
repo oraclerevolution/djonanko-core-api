@@ -47,6 +47,9 @@ export class User {
     @Column({nullable: false, default: false})
     premium: boolean
 
+    @Column({nullable: true, default: false})
+    premiumActivated: boolean
+
     @Column({nullable: false, default: 200000})
     plafonds: number
 

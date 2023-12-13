@@ -48,4 +48,9 @@ export class UserController {
     ){
         return await this.userService.updateUser(id, payload)
     }
+
+    @Get('users-premiums')
+    async getUsersPremiums(){
+        return await this.userService.getUsersPremiums()
+    }
 }
