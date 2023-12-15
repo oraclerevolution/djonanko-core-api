@@ -53,4 +53,12 @@ export class UserController {
     async getUsersPremiums(){
         return await this.userService.getUsersPremiums()
     }
+
+    @Patch('update-user-mobile-money')
+    async updateUserMobileMoney(
+        @Query('id') id: number,
+        @Body() payload: UpdateUserDto
+    ){
+        return await this.userService.updateUserMobileMoney(id, payload)
+    }
 }
