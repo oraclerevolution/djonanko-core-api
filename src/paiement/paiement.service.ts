@@ -6,9 +6,17 @@ import { UserService } from 'src/user/user.service';
 import { HistoriquesService } from 'src/historiques/historiques.service';
 import { MakePaiementDto } from './dto/make-paiement.dto';
 import { TransactionType } from 'src/historiques/enums/transaction-type.enum';
+import {TransactionType as PaiementType} from "src/transfert/enums/transfer-type.enum"
 import { CompteCollecteService } from 'src/compte-collecte/compte-collecte.service';
 import { CollectType } from 'src/compte-collecte/enums/collect-type.enum';
 import { Cron } from '@nestjs/schedule';
+import { PaymentInitDto } from './dto/payment-init.dto';
+import { User } from 'src/user/entities/user.entity';
+import { CompteReservationService } from 'src/compte-reservation/compte-reservation.service';
+import { TransactionResponse } from 'src/helper/enums/TransactionResponse.enum';
+import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
+import { PaymentDebitDto } from './dto/payment-debit.dto';
+import { PaymentExecDto } from './dto/payment-exec.dto';
 
 @Injectable()
 export class PaiementService {
@@ -16,19 +24,19 @@ export class PaiementService {
         @InjectRepository(Paiement) private readonly repository: Repository<Paiement>,
         private readonly userService: UserService,
         private readonly historiqueService: HistoriquesService,
-        private readonly compteCollecteService: CompteCollecteService
+        private readonly compteCollecteService: CompteCollecteService,
+        private readonly compteReservationService: CompteReservationService,
     ) { }
-
+    
     /**
-     * Performs a payment transaction.
+     * Initializes a payment with the given payload.
      *
-     * @param {MakePaiementDto} payload - The payment details.
-     * @return {Promise<any>} The result of the payment transaction.
+     * @param {MakePaiementDto} payload - The payload containing information about the payment.
+     * @returns {Promise<PaymentInitDto>} - A promise that resolves to the initialized payment.
      */
-    async makePaiement(payload: MakePaiementDto): Promise<any> {
+    async paymentInitializer(payload: MakePaiementDto): Promise<PaymentInitDto> {
         const { senderPhoneNumber, receiverPhoneNumber, amount } = payload;
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
-        const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverPhoneNumber);
         const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
         const paiement = new Paiement();
         paiement.amount = amount;
@@ -42,31 +50,110 @@ export class PaiementService {
         paiement.senderPhoneNumber = senderPhoneNumber;
         paiement.receiverPhoneNumber = receiverPhoneNumber;
 
-        const updateSenderBalance = await this.userService.updateUser(getSenderInfos.id, {
-            solde: balanceAfterSending.toString()
-        })
+        await this.repository.save(paiement);
+        return {
+            payment: paiement,
+            amount : amount,
+            fees : paiement.fees,
+            senderInfos: getSenderInfos,
+            status: TransactionResponse.SUCCESS,
+            receiverNumber: receiverPhoneNumber
+        }
+    }
 
+    /**
+     * Debits the payment from the sender's account and creates a reservation
+     * and a collection record.
+     *
+     * @param {Paiement} paiement - The payment object.
+     * @param {string} amount - The amount of the payment.
+     * @param {User} senderInfos - Information about the sender.
+     * @param {string} fees - The fees associated with the payment.
+     * @param {string} receiverNumber - The receiver's phone number.
+     * @return {Promise<PaymentDebitDto>} The debit payment DTO.
+     */
+    async paymentDebit(paiement: Paiement, amount: string, senderInfos:User, fees: string, receiverNumber: string): Promise<PaymentDebitDto> {
+        const cost = parseInt(amount) + parseInt(fees);
+        const balanceAfterSending = parseInt(senderInfos.solde) - cost;
+        await this.userService.updateUser(senderInfos.id, {
+            solde: balanceAfterSending.toString(),
+        })
+        const reservation = await this.compteReservationService.createCompteReservation({
+            amount: amount,
+            fees: fees,
+            transactionStatus: "IN PROGRESS",
+            transactionType: TransactionType.PAIEMENT
+        })
+        await this.compteCollecteService.createCompteCollect({
+            amount: fees,
+            collectType: CollectType.FRAIS
+        })
+        
+        return {
+            paiement,
+            reservation,
+            amount,
+            receiverNumber,
+            senderInfos,
+            fees,
+            status: TransactionResponse.SUCCESS
+        }
+    }
+
+    /**
+     * Sends a payment from the sender to the receiver.
+     *
+     * @param {User} senderInfos - The information of the sender.
+     * @param {CompteReservation} reservation - The reservation associated with the payment.
+     * @param {string} receiverNumber - The phone number of the receiver.
+     * @param {string} amount - The amount of the payment.
+     * @param {Paiement} paiement - The payment object.
+     * @param {string} fees - The fees associated with the payment.
+     * @return {Promise<PaymentExecDto>} - The payment execution response.
+     */
+    async sendPayment(senderInfos: User, reservation:CompteReservation, receiverNumber: string, amount: string, paiement: Paiement, fees: string): Promise<PaymentExecDto> {
+        const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
             solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString()
         })
-
-        if (updateSenderBalance.affected === 1 && updateReceiverBalance.affected === 1) {
-            const createPaiement = await this.repository.save(paiement);
-            if (createPaiement) {
-                await this.historiqueService.createHistorique({
-                    sender: getSenderInfos,
-                    receiver: getReceiverInfos,
-                    transactionType: TransactionType.PAIEMENT,
-                    amount: amount,
-                    icon: 'send'
-                })
-                await this.compteCollecteService.createCompteCollect({
-                    amount: getSenderInfos.premium === true ? (0.005 * parseInt(amount)).toString() : (0.01 * parseInt(amount)).toString(),
-                    collectType: CollectType.FRAIS
-                })
-                return createPaiement
+        if(updateReceiverBalance.affected === 1){
+            await this.compteReservationService.updateCompteReservation(reservation.id, {
+                transactionStatus: "COMPLETED"
+            })
+            await this.repository.update(paiement.id, {
+                status: PaiementType.SUCCESS
+            })
+            await this.historiqueService.createHistorique({
+                sender: senderInfos,
+                receiver: getReceiverInfos,
+                transactionType: TransactionType.PAIEMENT,
+                amount: amount,
+                fees: fees,
+                icon: 'send'
+            })
+            return {
+                status : TransactionResponse.SUCCESS
+            }
+        }else{
+            await this.repository.update(paiement.id, {
+                status: PaiementType.FAILED
+            })
+            await this.compteReservationService.updateCompteReservation(reservation.id, {
+                transactionStatus: "FAILED"
+            })
+            await this.historiqueService.createHistorique({
+                sender: senderInfos,
+                receiver: getReceiverInfos,
+                transactionType: TransactionType.PAIEMENT,
+                amount: amount,
+                fees: fees,
+                icon: 'send'
+            })
+            return {
+                status : TransactionResponse.ERROR
             }
         }
+        
     }
 
     /**
@@ -108,6 +195,7 @@ export class PaiementService {
                 receiver: user,
                 transactionType: TransactionType.ABONNEMENT,
                 amount: "2000",
+                fees: "0",
                 icon: 'sync'
             })
             await this.compteCollecteService.createCompteCollect({

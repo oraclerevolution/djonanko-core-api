@@ -6,6 +6,7 @@ import { Paiement } from './entities/paiement.entity';
 import { HistoriquesModule } from 'src/historiques/historiques.module';
 import { UserModule } from 'src/user/user.module';
 import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module';
+import { CompteReservationModule } from 'src/compte-reservation/compte-reservation.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module
     ]),
     HistoriquesModule,
     UserModule,
-    CompteCollecteModule
+    CompteCollecteModule,
+    CompteReservationModule,
   ],
   controllers: [PaiementController],
   providers: [PaiementService]

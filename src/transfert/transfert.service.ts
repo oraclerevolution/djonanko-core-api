@@ -60,6 +60,7 @@ export class TransfertService {
                         receiver: getReceiverInfos,
                         transactionType: TransactionType.TRANSFERT,
                         amount: amount,
+                        fees: transfert.fees,
                         icon: 'send'
                     })
                     await this.compteCollecteService.createCompteCollect({

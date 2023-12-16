@@ -11,6 +11,6 @@ import { Marchands } from './entities/marchands.entity';
     ])
   ],
   controllers: [MarchandsController],
-  providers: [MarchandsService]
+  providers: [MarchandsService],
 })
 export class MarchandsModule {}
