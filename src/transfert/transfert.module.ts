@@ -6,13 +6,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transfert } from './entities/transfert.entity';
 import { HistoriquesModule } from 'src/historiques/historiques.module';
 import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module';
+import { CompteReservationModule } from 'src/compte-reservation/compte-reservation.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transfert]),
     UserModule,
     HistoriquesModule,
-    CompteCollecteModule
+    CompteCollecteModule,
+    CompteReservationModule
   ],
   controllers: [TransfertController],
   providers: [TransfertService]
