@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { FindOptions, FindOptionsWhere, Repository, UpdateResult, } from 'typeorm';
@@ -76,12 +76,17 @@ export class UserService {
                 otp
             }
         } else {
-            throw new NotFoundException("Connexion impossible, vérifiez vos identifiants")
+            throw new UnauthorizedException("Connexion impossible, vérifiez vos identifiants")
         }
     }
 
     generateVerificationCode() {
-        return phoneToken(4, { type: 'number' })
+        const optCode:  number = phoneToken(4, { type: 'number' })
+        if(String(optCode).length === 4){
+            return optCode
+        }else{
+            throw Error('Please retry login process')
+        }
     }
 
     async getUserByPhoneNumber(phoneNumber: string): Promise<User> {

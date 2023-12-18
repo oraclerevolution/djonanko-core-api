@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { PaiementService } from './paiement.service';
 import { MakePaiementDto } from './dto/make-paiement.dto';
 import { PaymentExecDto } from './dto/payment-exec.dto';
@@ -7,7 +7,9 @@ import { Paiement } from './entities/paiement.entity';
 import { User } from 'src/user/entities/user.entity';
 import { PaymentDebitDto } from './dto/payment-debit.dto';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
+import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 
+@UseGuards(FullAuthGuard)
 @Controller('paiement')
 export class PaiementController {
     constructor(

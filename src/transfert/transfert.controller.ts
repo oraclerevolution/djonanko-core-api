@@ -1,10 +1,12 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { TransfertService } from './transfert.service';
 import { MakeTransfertDto } from './dto/make-transfert.dto';
 import { Transfert } from './entities/transfert.entity';
 import { User } from 'src/user/entities/user.entity';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
+import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 
+@UseGuards(FullAuthGuard)
 @Controller('transfert')
 export class TransfertController {
     constructor(
