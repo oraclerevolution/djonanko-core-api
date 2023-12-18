@@ -21,6 +21,9 @@ export class Transfert {
     @Column({name: 'sender_phone_number'})
     senderPhoneNumber: string;
 
+    @Column({name: 'reference'})
+    reference: string;
+
     @Column({name: 'receiver_phone_number'})
     receiverPhoneNumber: string;
 

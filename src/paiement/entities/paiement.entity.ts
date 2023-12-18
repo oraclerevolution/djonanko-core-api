@@ -24,6 +24,9 @@ export class Paiement {
     @Column({name: 'fees'})
     fees: string;
 
+    @Column({name: 'reference'})
+    reference: string;
+
     @Column({name: 'receiver_phone_number'})
     receiverPhoneNumber: string;
 

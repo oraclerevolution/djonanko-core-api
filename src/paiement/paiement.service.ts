@@ -6,7 +6,7 @@ import { UserService } from 'src/user/user.service';
 import { HistoriquesService } from 'src/historiques/historiques.service';
 import { MakePaiementDto } from './dto/make-paiement.dto';
 import { TransactionType } from 'src/historiques/enums/transaction-type.enum';
-import {TransactionType as PaiementType} from "src/transfert/enums/transfer-type.enum"
+import { TransactionType as PaiementType } from "src/transfert/enums/transfer-type.enum"
 import { CompteCollecteService } from 'src/compte-collecte/compte-collecte.service';
 import { CollectType } from 'src/compte-collecte/enums/collect-type.enum';
 import { Cron } from '@nestjs/schedule';
@@ -27,7 +27,7 @@ export class PaiementService {
         private readonly compteCollecteService: CompteCollecteService,
         private readonly compteReservationService: CompteReservationService,
     ) { }
-    
+
     /**
      * Initializes a payment with the given payload.
      *
@@ -46,6 +46,7 @@ export class PaiementService {
             paiement.fees = (0.01 * parseInt(amount)).toString();
         }
         paiement.amountBeforeSending = getSenderInfos.solde;
+        paiement.reference = this.generateReference();
         paiement.amountAfterSending = (balanceAfterSending).toString();
         paiement.senderPhoneNumber = senderPhoneNumber;
         paiement.receiverPhoneNumber = receiverPhoneNumber;
@@ -53,8 +54,8 @@ export class PaiementService {
         await this.repository.save(paiement);
         return {
             payment: paiement,
-            amount : amount,
-            fees : paiement.fees,
+            amount: amount,
+            fees: paiement.fees,
             senderInfos: getSenderInfos,
             status: TransactionResponse.SUCCESS,
             receiverNumber: receiverPhoneNumber
@@ -72,7 +73,7 @@ export class PaiementService {
      * @param {string} receiverNumber - The receiver's phone number.
      * @return {Promise<PaymentDebitDto>} The debit payment DTO.
      */
-    async paymentDebit(paiement: Paiement, amount: string, senderInfos:User, fees: string, receiverNumber: string): Promise<PaymentDebitDto> {
+    async paymentDebit(paiement: Paiement, amount: string, senderInfos: User, fees: string, receiverNumber: string): Promise<PaymentDebitDto> {
         const cost = parseInt(amount) + parseInt(fees);
         const balanceAfterSending = parseInt(senderInfos.solde) - cost;
         await this.userService.updateUser(senderInfos.id, {
@@ -88,7 +89,7 @@ export class PaiementService {
             amount: fees,
             collectType: CollectType.FRAIS
         })
-        
+
         return {
             paiement,
             reservation,
@@ -111,12 +112,12 @@ export class PaiementService {
      * @param {string} fees - The fees associated with the payment.
      * @return {Promise<PaymentExecDto>} - The payment execution response.
      */
-    async sendPayment(senderInfos: User, reservation:CompteReservation, receiverNumber: string, amount: string, paiement: Paiement, fees: string): Promise<PaymentExecDto> {
+    async sendPayment(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, paiement: Paiement, fees: string): Promise<PaymentExecDto> {
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
             solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString()
         })
-        if(updateReceiverBalance.affected === 1){
+        if (updateReceiverBalance.affected === 1) {
             await this.compteReservationService.updateCompteReservation(reservation.id, {
                 transactionStatus: "COMPLETED"
             })
@@ -132,9 +133,9 @@ export class PaiementService {
                 icon: 'send'
             })
             return {
-                status : TransactionResponse.SUCCESS
+                status: TransactionResponse.SUCCESS
             }
-        }else{
+        } else {
             await this.repository.update(paiement.id, {
                 status: PaiementType.FAILED
             })
@@ -150,10 +151,10 @@ export class PaiementService {
                 icon: 'send'
             })
             return {
-                status : TransactionResponse.ERROR
+                status: TransactionResponse.ERROR
             }
         }
-        
+
     }
 
     /**
@@ -205,7 +206,7 @@ export class PaiementService {
         }
     }
 
-   
+
     @Cron('0 0 0 27 * *')
     /**
      * Changes the premium status of users.
@@ -220,5 +221,19 @@ export class PaiementService {
                 premiumActivated: false
             })
         }
+    }
+
+    /**
+     * Generates a random reference string.
+     *
+     * @return {string} The generated reference string.
+    */
+    generateReference(): string {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let reference = '';
+        for (let i = 0; i < 10; i++) {
+            reference += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return `DJONANKO-${reference}`;
     }
 }

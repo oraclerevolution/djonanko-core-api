@@ -36,6 +36,7 @@ export class TransfertService {
             transfer.fees = (0.01 * parseInt(amount)).toString()
         }
         transfer.amountBeforeSending = getSenderInfos.solde
+        transfer.reference = this.generateReference()
         transfer.amountAfterSending = (balanceAfterSending).toString()
         transfer.senderPhoneNumber = senderPhoneNumber
         transfer.receiverPhoneNumber = receiverPhoneNumber
@@ -136,5 +137,20 @@ export class TransfertService {
             const fees = 0.01 * amount;
             return amount + fees;
         }
+    }
+
+    
+    /**
+     * Generates a random reference string.
+     *
+     * @return {string} The generated reference string.
+     */
+    generateReference(): string {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let reference = '';
+        for (let i = 0; i < 10; i++) {
+            reference += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return `DJONANKO-${reference}`;
     }
 }
