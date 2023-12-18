@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { FullAuthStrategy } from 'src/full-auth-guard/full-auth.strategy';
 
 @Module({
   imports: [
@@ -19,7 +20,10 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [
+    UserService,
+    FullAuthStrategy
+  ],
   exports: [UserService]
 })
 export class UserModule {}
