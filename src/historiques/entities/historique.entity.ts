@@ -22,6 +22,15 @@ export class Historique {
     )
     receiver: User
 
+    @Column()
+    senderIdentifiant: number
+
+    @Column()
+    receiverIdentifiant: number
+
+    @Column({nullable: true})
+    referenceTransaction: string
+
     @Column({
         type: 'enum',
         enum: TransactionType

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paiement } from './entities/paiement.entity';
 import { Repository } from 'typeorm';
@@ -23,7 +23,7 @@ export class PaiementService {
     constructor(
         @InjectRepository(Paiement) private readonly repository: Repository<Paiement>,
         private readonly userService: UserService,
-        private readonly historiqueService: HistoriquesService,
+        @Inject(forwardRef(() => HistoriquesService)) private readonly historiqueService: HistoriquesService,
         private readonly compteCollecteService: CompteCollecteService,
         private readonly compteReservationService: CompteReservationService,
     ) { }
@@ -127,6 +127,9 @@ export class PaiementService {
             await this.historiqueService.createHistorique({
                 sender: senderInfos,
                 receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                referenceTransaction: paiement.reference,
                 transactionType: TransactionType.PAIEMENT,
                 amount: amount,
                 fees: fees,
@@ -145,6 +148,9 @@ export class PaiementService {
             await this.historiqueService.createHistorique({
                 sender: senderInfos,
                 receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                referenceTransaction: paiement.reference,
                 transactionType: TransactionType.PAIEMENT,
                 amount: amount,
                 fees: fees,
@@ -194,7 +200,10 @@ export class PaiementService {
             await this.historiqueService.createHistorique({
                 sender: user,
                 receiver: user,
+                senderIdentifiant: user.id,
+                receiverIdentifiant: user.id,
                 transactionType: TransactionType.ABONNEMENT,
+                referenceTransaction: "ABONNEMENT",
                 amount: "2000",
                 fees: "0",
                 icon: 'sync'
@@ -235,5 +244,13 @@ export class PaiementService {
             reference += characters.charAt(Math.floor(Math.random() * characters.length));
         }
         return `DJONANKO-${reference}`;
+    }
+
+    async getPaymentByReference(reference: string): Promise<Paiement> {
+        return await this.repository.findOne({
+            where: {
+                reference
+            }
+        })
     }
 }

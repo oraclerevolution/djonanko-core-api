@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { TransfertService } from './transfert.service';
 import { MakeTransfertDto } from './dto/make-transfert.dto';
 import { Transfert } from './entities/transfert.entity';
@@ -45,5 +45,12 @@ export class TransfertController {
         }
     ){
         return await this.transfertService.sendTransfer(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.transfer, payload.fees)
+    }
+
+    @Get('transferByReference')
+    async getTransferByReference(
+        @Query('reference') reference: string
+    ){
+        return await this.transfertService.getTransferByReference(reference)
     }
 }

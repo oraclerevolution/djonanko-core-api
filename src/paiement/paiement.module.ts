@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaiementController } from './paiement.controller';
 import { PaiementService } from './paiement.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,12 +13,13 @@ import { CompteReservationModule } from 'src/compte-reservation/compte-reservati
     TypeOrmModule.forFeature([
       Paiement
     ]),
-    HistoriquesModule,
+    forwardRef(() => HistoriquesModule),
     UserModule,
     CompteCollecteModule,
     CompteReservationModule,
   ],
   controllers: [PaiementController],
-  providers: [PaiementService]
+  providers: [PaiementService],
+  exports: [PaiementService]
 })
 export class PaiementModule {}

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { PaiementService } from './paiement.service';
 import { MakePaiementDto } from './dto/make-paiement.dto';
 import { PaymentExecDto } from './dto/payment-exec.dto';
@@ -48,5 +48,12 @@ export class PaiementController {
         }
     ){
         return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.fees)
+    }
+
+    @Get('paiementByReference')
+    async getPaiementByReference(
+        @Query('reference') reference: string
+    ){
+        return await this.paiementService.getPaymentByReference(reference)
     }
 }

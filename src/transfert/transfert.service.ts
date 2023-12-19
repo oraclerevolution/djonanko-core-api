@@ -95,7 +95,10 @@ export class TransfertService {
             await this.historiqueService.createHistorique({
                 sender: senderInfos,
                 receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
                 transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
                 amount,
                 fees,
                 icon: "send"
@@ -113,7 +116,10 @@ export class TransfertService {
             await this.historiqueService.createHistorique({
                 sender: senderInfos,
                 receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
                 transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
                 amount,
                 fees,
                 icon: 'send'
@@ -152,5 +158,13 @@ export class TransfertService {
             reference += characters.charAt(Math.floor(Math.random() * characters.length));
         }
         return `DJONANKO-${reference}`;
+    }
+
+    async getTransferByReference(reference: string): Promise<Transfert> {
+        return await this.repository.findOne({
+            where: {
+                reference
+            }
+        })
     }
 }

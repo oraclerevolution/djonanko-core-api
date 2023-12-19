@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { FindOptions, FindOptionsWhere, Repository, UpdateResult, } from 'typeorm';
+import { Repository, UpdateResult, } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -91,6 +91,10 @@ export class UserService {
 
     async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
         return await this.repository.createQueryBuilder("user").where("user.numero = :phoneNumber", { phoneNumber }).getOne()
+    }
+
+    async getUserById(id: number): Promise<User> {
+        return await this.repository.findOne(id)
     }
 
     async updateUser(id: number, user: UpdateUserDto,): Promise<UpdateResult> {
