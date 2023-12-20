@@ -67,4 +67,22 @@ export class UserController {
     ){
         return await this.userService.updateUserMobileMoney(id, payload)
     }
+
+    @UseGuards(FullAuthGuard)
+    @Post('verify-user-password')
+    async updateUserPassword(
+        @Query('id') id: number,
+        @Body() payload: UpdateUserDto
+    ){
+        return await this.userService.verifyUserPassword(id, payload)
+    }
+
+    @UseGuards(FullAuthGuard)
+    @Patch('change-user-password')
+    async changeUserPassword(
+        @Query('id') id: number,
+        @Body() payload: UpdateUserDto
+    ){
+        return await this.userService.updateUserPassword(id, payload)
+    }
 }

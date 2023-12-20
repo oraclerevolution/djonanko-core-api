@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository, UpdateResult, } from 'typeorm';
@@ -14,6 +14,7 @@ import { AuthType, Infobip } from "@infobip-api/sdk"
 import { UserLoginDto } from './dto/user-login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMobileMoneyDto } from './dto/update-mobile-money.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UserService {
@@ -152,5 +153,44 @@ export class UserService {
         })
 
         return user
+    }
+
+    /**
+     * Asynchronously verifies the user's password.
+     *
+     * @param {number} id - The ID of the user.
+     * @param {string} password - The password to verify.
+     * @return {Promise<{status: boolean}>} - The status of the verification.
+     */
+    async verifyUserPassword(id: number, payload: UpdateUserDto) {
+        const user = await this.repository.findOne(id)
+        const hashedPassword = await bcrypt.hash(payload.password, user.salt)
+        if(hashedPassword === user.password){
+            
+            return {
+                status: true
+            }
+        }else{
+            return {
+                status: false
+            }
+        }
+    }
+
+    /**
+     * Updates the password of a user.
+     *
+     * @param {number} id - The ID of the user.
+     * @param {UpdateUserDto} payload - The payload containing the new password.
+     * @return {Promise<void>} - A promise that resolves when the password is updated.
+     */
+    async updateUserPassword(id: number, payload: UpdateUserDto) {
+        const { password } = payload
+
+        const user = await this.repository.findOne(id)
+        const hashedPassword = await bcrypt.hash(password, user.salt)
+        return await this.repository.update(id, {
+            password: hashedPassword
+        })
     }
 }
