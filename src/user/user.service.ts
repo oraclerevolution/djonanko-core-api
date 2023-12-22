@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository, UpdateResult, } from 'typeorm';
+import { FindConditions, Repository, UpdateResult, } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -192,5 +192,25 @@ export class UserService {
         return await this.repository.update(id, {
             password: hashedPassword
         })
+    }
+
+    async getUserMobileMoney(id: number, mobileMoney: string): Promise<string> {
+        const user = await this.repository.findOne(id)
+        
+        if(mobileMoney === "Orange"){
+            return user.orangeMoney
+        }
+
+        if(mobileMoney === "Wave"){
+            return user.waveMoney
+        }
+
+        if(mobileMoney === "Mtn"){
+            return user.mtnMoney
+        }
+
+        if(mobileMoney === "Moov"){
+            return user.moovMoney
+        }
     }
 }

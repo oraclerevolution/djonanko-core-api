@@ -85,4 +85,14 @@ export class UserController {
     ){
         return await this.userService.updateUserPassword(id, payload)
     }
+
+    @UseGuards(FullAuthGuard)
+    @Get('get-user-mobile-money')
+    async getUserMobileMoney(
+        @Query('id') id: number,
+        @Query('mobileMoney') mobileMoney: string
+    ): Promise<string> {
+        const number = await this.userService.getUserMobileMoney(id,mobileMoney)
+        return number
+    }
 }
