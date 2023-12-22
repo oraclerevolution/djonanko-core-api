@@ -52,4 +52,20 @@ export class HistoriquesController {
     ){
         return await this.historiquesService.getOneHistorique(id)
     }
+
+    @Get('total-spent')
+    async getTotalSpent(
+        @Query('id') id: number,
+        @Query('month') month: number
+    ){
+        return await this.historiquesService.getTotalSpentForThisMonth(id, month)
+    }
+
+    @Get('total-received')
+    async getTotalReceived(
+        @Query('id') id: number,
+        @Query('month') month: number
+    ){
+        return await this.historiquesService.getTotalReceivedForThisMonth(id, month)
+    }
 }

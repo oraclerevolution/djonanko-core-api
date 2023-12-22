@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transfert } from './entities/transfert.entity';
-import { Repository } from 'typeorm';
+import { Between, FindConditions, Repository } from 'typeorm';
 import { MakeTransfertDto } from './dto/make-transfert.dto';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
@@ -13,6 +13,8 @@ import { CollectType } from 'src/compte-collecte/enums/collect-type.enum';
 import { TransactionResponse } from 'src/helper/enums/TransactionResponse.enum';
 import { CompteReservationService } from 'src/compte-reservation/compte-reservation.service';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
+import { Historique } from 'src/historiques/entities/historique.entity';
+import { HistoriqueFilterDto } from 'src/historiques/dto/historique-filter.dto';
 
 @Injectable()
 export class TransfertService {

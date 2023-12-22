@@ -149,4 +149,57 @@ export class HistoriquesService {
         }
         
     }
+
+    async getTotalSpentForThisMonth(id: number, month: number): Promise<any> {
+        const where: FindConditions<Historique> = {};
+        const wheres: FindConditions<Historique> = {};
+        let offset = 0;
+        const startDate = new Date(new Date().getFullYear(), month - 1, 1);
+        const endDate = new Date(new Date().getFullYear(), month, 0, 23, 59, 59, 999);
+
+        where.senderIdentifiant = id
+        where.transactionType = "TRANSFERT"
+        where.createdAt = Between(startDate, endDate);
+
+        wheres.senderIdentifiant = id
+        wheres.transactionType = "PAIEMENT"
+        wheres.createdAt = Between(startDate, endDate);
+        
+
+        const response = await this.repository.findAndCount({
+            where,
+            skip: offset,
+        });
+
+        const response2 = await this.repository.findAndCount({
+            where: wheres,
+            skip: offset,
+        })
+  
+        const historiques = response[0].concat(response2[0]);
+        const totalAmount = historiques.reduce((sum, historique) => sum + parseInt(historique.amount), 0);
+
+        return totalAmount
+    }
+
+    async getTotalReceivedForThisMonth(id: number, month: number): Promise<any> {
+        const where: FindConditions<Historique> = {};
+        let offset = 0;
+        const startDate = new Date(new Date().getFullYear(), month - 1, 1);
+        const endDate = new Date(new Date().getFullYear(), month, 0, 23, 59, 59, 999);
+
+        where.senderIdentifiant = id
+        where.transactionType = "DEPOT"
+        where.createdAt = Between(startDate, endDate);
+
+        const response = await this.repository.findAndCount({
+            where,
+            skip: offset,
+        });
+  
+        const historiques = response[0];
+        const totalAmount = historiques.reduce((sum, historique) => sum + parseInt(historique.amount), 0);
+
+        return totalAmount
+    }
 }
