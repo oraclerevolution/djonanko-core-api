@@ -95,4 +95,14 @@ export class UserController {
         const number = await this.userService.getUserMobileMoney(id,mobileMoney)
         return number
     }
+
+    @UseGuards(FullAuthGuard)
+    @Get('get-receiver-money-money')
+    async getUserReceiverNumber(
+        @Query('phoneNumber') phoneNumber: string,
+        @Query('mobileMoney') mobileMoney: string
+    ): Promise<string>{
+        const number = await this.userService.getReceiverMobileMoney(phoneNumber, mobileMoney)
+        return number
+    }
 }

@@ -213,4 +213,24 @@ export class UserService {
             return user.moovMoney
         }
     }
+
+    async getReceiverMobileMoney(phoneNumber: string, mobileMoney: string): Promise<string>{
+        const user = await this.getUserByPhoneNumber(phoneNumber)
+
+        if(mobileMoney === "Orange"){
+            return user.orangeMoney
+        }
+
+        if(mobileMoney === "Wave"){
+            return user.waveMoney
+        }
+
+        if(mobileMoney === "Mtn"){
+            return user.mtnMoney
+        }
+
+        if(mobileMoney === "Moov"){
+            return user.moovMoney
+        }
+    }
 }
