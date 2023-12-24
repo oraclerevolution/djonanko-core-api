@@ -22,6 +22,15 @@ export class Historique {
     )
     receiver: User
 
+    @Column()
+    senderIdentifiant: number
+
+    @Column()
+    receiverIdentifiant: number
+
+    @Column({nullable: true})
+    referenceTransaction: string
+
     @Column({
         type: 'enum',
         enum: TransactionType
@@ -30,6 +39,9 @@ export class Historique {
 
     @Column()
     amount: string;
+
+    @Column()
+    fees: string;
 
     @Column()
     icon: string;

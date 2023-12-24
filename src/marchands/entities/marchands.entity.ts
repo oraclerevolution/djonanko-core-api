@@ -1,5 +1,6 @@
 import { CategorieMarchands } from "src/categorie-marchands/entities/categorie-marchands.entity";
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "src/user/entities/user.entity";
 
 @Entity({
     name: 'marchands'
@@ -26,6 +27,9 @@ export class Marchands {
 
     @Column({default:"0"})
     PaymentNumber: string;
+
+    @Column({nullable: false})
+    userId: number;
 
     @Column({nullable: false})
     categorieId: string;

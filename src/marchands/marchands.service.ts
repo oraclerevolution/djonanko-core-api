@@ -24,6 +24,7 @@ export class MarchandsService {
         marchand.logo = marchands.logo;
         marchand.phoneNumber = marchands.phoneNumber;
         marchand.categorieId = marchands.categorieId;
+        marchand.userId = marchands.userId;
         marchand.IsMatriculeExist = marchands.IsMatriculeExist;
         marchand.textIfMatriculeExist = marchands.textIfMatriculeExist;
         marchand.PaymentNumber = marchands.PaymentNumber;

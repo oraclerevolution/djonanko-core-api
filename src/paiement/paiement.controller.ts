@@ -1,18 +1,59 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { PaiementService } from './paiement.service';
-import { Paiement } from './entities/paiement.entity';
 import { MakePaiementDto } from './dto/make-paiement.dto';
+import { PaymentExecDto } from './dto/payment-exec.dto';
+import { PaymentInitDto } from './dto/payment-init.dto';
+import { Paiement } from './entities/paiement.entity';
+import { User } from 'src/user/entities/user.entity';
+import { PaymentDebitDto } from './dto/payment-debit.dto';
+import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
+import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 
+@UseGuards(FullAuthGuard)
 @Controller('paiement')
 export class PaiementController {
     constructor(
         private readonly paiementService: PaiementService
     ) {}
 
-    @Post()
-    async makePaiement(
+    @Post('initPayment')
+    async initPayment(
         @Body() payload: MakePaiementDto
-    ): Promise<Paiement> {
-        return await this.paiementService.makePaiement(payload)
+    ): Promise<PaymentInitDto> {
+        return await this.paiementService.paymentInitializer(payload)
+    }
+
+    @Post('debitPayment')
+    async debitPayment(
+        @Body() payload: {
+            paiement: Paiement
+            amount: string
+            senderInfos: User
+            fees: string
+            receiverNumber: string
+        }
+    ): Promise<PaymentDebitDto> {
+        return await this.paiementService.paymentDebit(payload.paiement, payload.amount, payload.senderInfos, payload.fees, payload.receiverNumber)
+    }
+
+    @Post('execPayment')
+    async execPayment(
+        @Body() payload: {
+            senderInfos: User, 
+            reservation:CompteReservation, 
+            receiverNumber: string, 
+            amount: string, 
+            paiement: Paiement, 
+            fees: string
+        }
+    ){
+        return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.fees)
+    }
+
+    @Get('paiementByReference')
+    async getPaiementByReference(
+        @Query('reference') reference: string
+    ){
+        return await this.paiementService.getPaymentByReference(reference)
     }
 }

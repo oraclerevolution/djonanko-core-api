@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UserAuth } from './enums/user-auth.enum';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 
 @Controller('user')
 export class UserController {
@@ -26,6 +27,7 @@ export class UserController {
         return await this.userService.login(payload)
     }
 
+    @UseGuards(FullAuthGuard)
     @Get('user-infos-by-number')
     async userInfos(
         @Query('phoneNumber') phoneNumber: string
@@ -33,6 +35,7 @@ export class UserController {
         return await this.userService.getUserByPhoneNumber(phoneNumber)
     }
 
+    @UseGuards(FullAuthGuard)
     @Get('user-balance')
     async userBalance(
         @Query('phoneNumber') phoneNumber: string
@@ -41,6 +44,7 @@ export class UserController {
         return user.solde
     }
 
+    @UseGuards(FullAuthGuard)
     @Patch('update-user')
     async updateUser(
         @Body() payload: UpdateUserDto,
@@ -49,16 +53,56 @@ export class UserController {
         return await this.userService.updateUser(id, payload)
     }
 
+    @UseGuards(FullAuthGuard)
     @Get('users-premiums')
     async getUsersPremiums(){
         return await this.userService.getUsersPremiums()
     }
 
+    @UseGuards(FullAuthGuard)
     @Patch('update-user-mobile-money')
     async updateUserMobileMoney(
         @Query('id') id: number,
         @Body() payload: UpdateUserDto
     ){
         return await this.userService.updateUserMobileMoney(id, payload)
+    }
+
+    @UseGuards(FullAuthGuard)
+    @Post('verify-user-password')
+    async updateUserPassword(
+        @Query('id') id: number,
+        @Body() payload: UpdateUserDto
+    ){
+        return await this.userService.verifyUserPassword(id, payload)
+    }
+
+    @UseGuards(FullAuthGuard)
+    @Patch('change-user-password')
+    async changeUserPassword(
+        @Query('id') id: number,
+        @Body() payload: UpdateUserDto
+    ){
+        return await this.userService.updateUserPassword(id, payload)
+    }
+
+    @UseGuards(FullAuthGuard)
+    @Get('get-user-mobile-money')
+    async getUserMobileMoney(
+        @Query('id') id: number,
+        @Query('mobileMoney') mobileMoney: string
+    ): Promise<string> {
+        const number = await this.userService.getUserMobileMoney(id,mobileMoney)
+        return number
+    }
+
+    @UseGuards(FullAuthGuard)
+    @Get('get-receiver-money-money')
+    async getUserReceiverNumber(
+        @Query('phoneNumber') phoneNumber: string,
+        @Query('mobileMoney') mobileMoney: string
+    ): Promise<string>{
+        const number = await this.userService.getReceiverMobileMoney(phoneNumber, mobileMoney)
+        return number
     }
 }

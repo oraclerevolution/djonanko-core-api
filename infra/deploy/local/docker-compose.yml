@@ -1,0 +1,25 @@
+version: "3.7"
+
+services:
+    api:
+        build:
+            context: ${APP_ROOT}
+            dockerfile: infra/docker/Dockerfile
+            args:
+                APP_ENV: "dev"
+        environment:
+            APP_ENV: "dev"
+        env_file:
+            - "${APP_ROOT}/infra/config/.env"
+        networks:
+            - djonanko_network
+        ports:
+            - 3090:3000
+        volumes:
+           - "${APP_ROOT}:/app/" # allow watch dev mode
+        entrypoint: /bin/sh -c "npm install && npm run start:debug"
+
+networks:
+    djonanko_network:
+        external: true
+        name: djonanko_network

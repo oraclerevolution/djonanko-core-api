@@ -33,13 +33,15 @@
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
     "generate-sms-verification-code": "^1.0.5",
+    "i": "^0.3.7",
     "moment": "^2.29.4",
+    "npm": "^10.2.5",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
-    "typeorm": "^0.3.17",
+    "typeorm": "^0.2.37",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

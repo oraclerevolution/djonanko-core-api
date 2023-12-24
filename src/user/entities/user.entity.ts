@@ -32,16 +32,16 @@ export class User {
     @Column()
     salt: string
 
-    @Column({nullable: true, name: 'wave_money'})
+    @Column({nullable: true,unique: true, name: 'wave_money'})
     waveMoney: string
 
-    @Column({nullable: true, name: 'orange_money'})
+    @Column({nullable: true,unique: true, name: 'orange_money'})
     orangeMoney: string
 
-    @Column({nullable: true, name: 'mtn_money'})
+    @Column({nullable: true,unique: true, name: 'mtn_money'})
     mtnMoney: string
 
-    @Column({nullable: true, name: 'moov_money'})
+    @Column({nullable: true,unique: true, name: 'moov_money'})
     moovMoney: string
 
     @Column({nullable: false, default: false})

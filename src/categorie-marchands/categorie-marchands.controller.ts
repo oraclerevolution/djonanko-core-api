@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { CategorieMarchandsService } from './categorie-marchands.service';
 import { CategorieMarchands } from './entities/categorie-marchands.entity';
 import { RetrieveMerchantsCategoryDto } from './dto/retrieve-merchants-category.dto';
+import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 
+@UseGuards(FullAuthGuard)
 @Controller('categorie-marchands')
 export class CategorieMarchandsController {
     constructor(

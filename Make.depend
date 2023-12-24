@@ -1,0 +1,20 @@
+app_root := $(shell pwd)
+export app_root
+
+# Change this to the proper path for your project, likely the commented line
+compose-config := infra/deploy/local/docker-compose.yml
+
+# Change the project name here, set the same name for containers to be grouped under that name
+project-name := djonanko-core-api
+
+# Change the service name here
+service-name := api
+
+# Command executed when running "make lint"
+make_lint := npm run lint
+
+# Command executed when running "make test"
+make_test := npm run test
+
+# Command executed when running "make db"
+make_db := npm run typeorm:run-migrations

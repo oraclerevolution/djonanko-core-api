@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { FindOptions, FindOptionsWhere, Repository, UpdateResult, } from 'typeorm';
+import { FindConditions, Repository, UpdateResult, } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +14,7 @@ import { AuthType, Infobip } from "@infobip-api/sdk"
 import { UserLoginDto } from './dto/user-login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMobileMoneyDto } from './dto/update-mobile-money.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UserService {
@@ -76,16 +77,25 @@ export class UserService {
                 otp
             }
         } else {
-            throw new NotFoundException("Connexion impossible, vérifiez vos identifiants")
+            throw new UnauthorizedException("Connexion impossible, vérifiez vos identifiants")
         }
     }
 
     generateVerificationCode() {
-        return phoneToken(4, { type: 'number' })
+        const optCode:  number = phoneToken(4, { type: 'number' })
+        if(String(optCode).length === 4){
+            return optCode
+        }else{
+            throw Error('Please retry login process')
+        }
     }
 
     async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
         return await this.repository.createQueryBuilder("user").where("user.numero = :phoneNumber", { phoneNumber }).getOne()
+    }
+
+    async getUserById(id: number): Promise<User> {
+        return await this.repository.findOne(id)
     }
 
     async updateUser(id: number, user: UpdateUserDto,): Promise<UpdateResult> {
@@ -143,5 +153,84 @@ export class UserService {
         })
 
         return user
+    }
+
+    /**
+     * Asynchronously verifies the user's password.
+     *
+     * @param {number} id - The ID of the user.
+     * @param {string} password - The password to verify.
+     * @return {Promise<{status: boolean}>} - The status of the verification.
+     */
+    async verifyUserPassword(id: number, payload: UpdateUserDto) {
+        const user = await this.repository.findOne(id)
+        const hashedPassword = await bcrypt.hash(payload.password, user.salt)
+        if(hashedPassword === user.password){
+            
+            return {
+                status: true
+            }
+        }else{
+            return {
+                status: false
+            }
+        }
+    }
+
+    /**
+     * Updates the password of a user.
+     *
+     * @param {number} id - The ID of the user.
+     * @param {UpdateUserDto} payload - The payload containing the new password.
+     * @return {Promise<void>} - A promise that resolves when the password is updated.
+     */
+    async updateUserPassword(id: number, payload: UpdateUserDto) {
+        const { password } = payload
+
+        const user = await this.repository.findOne(id)
+        const hashedPassword = await bcrypt.hash(password, user.salt)
+        return await this.repository.update(id, {
+            password: hashedPassword
+        })
+    }
+
+    async getUserMobileMoney(id: number, mobileMoney: string): Promise<string> {
+        const user = await this.repository.findOne(id)
+        
+        if(mobileMoney === "Orange"){
+            return user.orangeMoney
+        }
+
+        if(mobileMoney === "Wave"){
+            return user.waveMoney
+        }
+
+        if(mobileMoney === "Mtn"){
+            return user.mtnMoney
+        }
+
+        if(mobileMoney === "Moov"){
+            return user.moovMoney
+        }
+    }
+
+    async getReceiverMobileMoney(phoneNumber: string, mobileMoney: string): Promise<string>{
+        const user = await this.getUserByPhoneNumber(phoneNumber)
+
+        if(mobileMoney === "Orange"){
+            return user.orangeMoney
+        }
+
+        if(mobileMoney === "Wave"){
+            return user.waveMoney
+        }
+
+        if(mobileMoney === "Mtn"){
+            return user.mtnMoney
+        }
+
+        if(mobileMoney === "Moov"){
+            return user.moovMoney
+        }
     }
 }
