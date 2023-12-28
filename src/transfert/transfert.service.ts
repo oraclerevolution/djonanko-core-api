@@ -55,37 +55,81 @@ export class TransfertService {
     }
 
     async transferDebit(transfer: Transfert, amount: string, senderInfos: User, fees: string, receiverNumber: string) {
-        const cost = parseInt(amount) + parseInt(fees)
-        const balanceAfterSending = parseInt(senderInfos.solde) - cost;
-        await this.userService.updateUser(senderInfos.id, {
-            solde: balanceAfterSending.toString()
-        })
-        const reservation = await this.compteReservationService.createCompteReservation({
-            amount,
-            fees,
-            transactionStatus: "IN PROGRESS",
-            transactionType: TransactionType.TRANSFERT
-        })
-        await this.compteCollecteService.createCompteCollect({
-            amount: fees,
-            collectType: CollectType.FRAIS
-        })
+        const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
+        if (parseInt(amount) > getReceiverInfos.plafonds) {
+            await this.repository.update(transfer.id, {
+                status: TransferType.FAILED
+            })
+            await this.historiqueService.createHistorique({
+                sender: senderInfos,
+                receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
+                amount,
+                status: TransferType.FAILED,
+                fees,
+                icon: "send"
+            })
+            return {
+                message: "Le destinataire ne peut pas recevoir plus que son plafond",
+                status: TransactionResponse.ERROR
+            }
+        }else if(parseInt(amount) > getReceiverInfos.cumulMensuelRestant){
+            await this.repository.update(transfer.id, {
+                status: TransferType.FAILED
+            })
+            await this.historiqueService.createHistorique({
+                sender: senderInfos,
+                receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
+                amount,
+                status: TransferType.FAILED,
+                fees,
+                icon: "send"
+            })
+            return {
+                message: `Le destinataire ne peut que recevoir ${getReceiverInfos.cumulMensuelRestant} FCFA`,
+                status: TransactionResponse.ERROR
+            }
 
-        return {
-            transfer,
-            reservation,
-            amount,
-            receiverNumber,
-            senderInfos,
-            fees,
-            status: TransactionResponse.SUCCESS
+        } else {
+            const cost = parseInt(amount) + parseInt(fees)
+            const balanceAfterSending = parseInt(senderInfos.solde) - cost;
+            await this.userService.updateUser(senderInfos.id, {
+                solde: balanceAfterSending.toString()
+            })
+            const reservation = await this.compteReservationService.createCompteReservation({
+                amount,
+                fees,
+                transactionStatus: "IN PROGRESS",
+                transactionType: TransactionType.TRANSFERT
+            })
+            await this.compteCollecteService.createCompteCollect({
+                amount: fees,
+                collectType: CollectType.FRAIS
+            })
+
+            return {
+                transfer,
+                reservation,
+                amount,
+                receiverNumber,
+                senderInfos,
+                fees,
+                status: TransactionResponse.SUCCESS
+            }
         }
     }
 
     async sendTransfer(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, transfer: Transfert, fees: string) {
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
-            solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString()
+            solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString(), cumulMensuelRestant: getReceiverInfos.cumulMensuelRestant - parseInt(amount)
         })
         if (updateReceiverBalance.affected === 1) {
             await this.compteReservationService.updateCompteReservation(reservation.id, {
@@ -102,6 +146,7 @@ export class TransfertService {
                 transactionType: TransactionType.TRANSFERT,
                 referenceTransaction: transfer.reference,
                 amount,
+                status: TransferType.SUCCESS,
                 fees,
                 icon: "send"
             })
@@ -123,6 +168,7 @@ export class TransfertService {
                 transactionType: TransactionType.TRANSFERT,
                 referenceTransaction: transfer.reference,
                 amount,
+                status: TransferType.SUCCESS,
                 fees,
                 icon: 'send'
             })
@@ -147,7 +193,7 @@ export class TransfertService {
         }
     }
 
-    
+
     /**
      * Generates a random reference string.
      *

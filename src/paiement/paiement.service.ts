@@ -132,6 +132,7 @@ export class PaiementService {
                 referenceTransaction: paiement.reference,
                 transactionType: TransactionType.PAIEMENT,
                 amount: amount,
+                status: PaiementType.SUCCESS,
                 fees: fees,
                 icon: 'send'
             })
@@ -153,6 +154,7 @@ export class PaiementService {
                 referenceTransaction: paiement.reference,
                 transactionType: TransactionType.PAIEMENT,
                 amount: amount,
+                status: PaiementType.SUCCESS,
                 fees: fees,
                 icon: 'send'
             })
@@ -205,6 +207,7 @@ export class PaiementService {
                 transactionType: TransactionType.ABONNEMENT,
                 referenceTransaction: "ABONNEMENT",
                 amount: "2000",
+                status: PaiementType.SUCCESS,
                 fees: "0",
                 icon: 'sync'
             })
