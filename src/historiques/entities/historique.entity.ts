@@ -44,6 +44,9 @@ export class Historique {
     fees: string;
 
     @Column()
+    status: string;
+
+    @Column()
     icon: string;
 
     @CreateDateColumn()

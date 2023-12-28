@@ -159,10 +159,12 @@ export class HistoriquesService {
 
         where.senderIdentifiant = id
         where.transactionType = "TRANSFERT"
+        where.status = "SUCCESS"
         where.createdAt = Between(startDate, endDate);
 
         wheres.senderIdentifiant = id
         wheres.transactionType = "PAIEMENT"
+        wheres.status = "SUCCESS"
         wheres.createdAt = Between(startDate, endDate);
         
 
