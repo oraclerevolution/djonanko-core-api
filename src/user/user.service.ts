@@ -55,7 +55,7 @@ export class UserService {
         const user = await this.repository.createQueryBuilder("user").where("user.numero = :numero", { numero }).getOne()
         //if user doesn't exist, we throw an error
         if (!user) {
-            throw new NotFoundException("Connexion impossible, l'utilisateur n'existe pas")
+            throw new NotFoundException("Connexion impossible, vérifiez vos identifiants")
         }
 
         const hashedPassword = await bcrypt.hash(password, user.salt)
@@ -68,7 +68,7 @@ export class UserService {
             const token = this.jwtService.sign(payload)
             delete user.salt
             const otp = this.generateVerificationCode()
-            const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`
+            const message = `Une tentative de connexion à votre compte vient d'être détectée. Votre code OTP de connexion est ${otp}. S'il ne s'agit pas de vous contactez le service support.`
             const phoneNumber = user.numero
             await this.sendSMSToUser({ phoneNumber, message })
             return {
@@ -166,7 +166,12 @@ export class UserService {
         const user = await this.repository.findOne(id)
         const hashedPassword = await bcrypt.hash(payload.password, user.salt)
         if(hashedPassword === user.password){
-            
+            const message = `Une tentative de connexion à votre compte vient d'être détectée. S'il ne s'agit pas de vous contactez le service support.`
+            const phoneNumber = user.numero
+            await this.sendSMSToUser({
+                phoneNumber,
+                message
+            })
             return {
                 status: true
             }

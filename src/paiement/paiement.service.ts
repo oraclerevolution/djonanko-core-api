@@ -136,6 +136,26 @@ export class PaiementService {
                 fees: fees,
                 icon: 'send'
             })
+            const senderPhoneNumber = senderInfos.numero
+            const senderMessage =
+            `Votre paiement de ${amount} FCFA a bien été effectué.
+Reference: ${paiement.reference}
+Date: ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Merci de votre confiance.`
+            await this.userService.sendSMSToUser({
+                phoneNumber: senderPhoneNumber,
+                message: senderMessage
+            })
+            const receiverPhoneNumber = getReceiverInfos.numero
+            const receiverMessage =
+            `${senderInfos.fullname} vient d'effectuer un paiement de ${amount} FCFA.
+Reference: ${paiement.reference}
+Date: ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Merci de votre confiance.`
+            await this.userService.sendSMSToUser({
+                phoneNumber: receiverPhoneNumber,
+                message: receiverMessage
+            })
             return {
                 status: TransactionResponse.SUCCESS
             }

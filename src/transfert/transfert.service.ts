@@ -150,6 +150,26 @@ export class TransfertService {
                 fees,
                 icon: "send"
             })
+            const senderPhoneNumber = senderInfos.numero
+            const senderMessage = 
+            `Votre transfert de ${amount} FCFA a bien été envoyé à ${getReceiverInfos.fullname} (${receiverNumber}).
+Reference: ${transfer.reference}
+Date: ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Merci de votre confiance.`
+            await this.userService.sendSMSToUser({
+                phoneNumber: senderPhoneNumber,
+                message: senderMessage
+            })
+            const receiverPhoneNumber = receiverNumber
+            const receiverMessage = 
+            `Vous avez reçu ${amount} FCFA de ${senderInfos.fullname} (${senderInfos.numero}).
+Reference: ${transfer.reference}
+Date: ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Merci de votre confiance`
+            await this.userService.sendSMSToUser({
+                phoneNumber: receiverPhoneNumber,
+                message: receiverMessage
+            })
             return {
                 status: TransactionResponse.SUCCESS
             }
