@@ -190,7 +190,8 @@ Merci de votre confiance`
                 message: receiverMessage
             })
             return {
-                status: TransactionResponse.SUCCESS
+                status: TransactionResponse.SUCCESS,
+                date: new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
             }
         } else {
             await this.repository.update(transfer.id, {
