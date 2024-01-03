@@ -15,6 +15,7 @@ import { CompteReservationService } from 'src/compte-reservation/compte-reservat
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { Historique } from 'src/historiques/entities/historique.entity';
 import { HistoriqueFilterDto } from 'src/historiques/dto/historique-filter.dto';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class TransfertService {
@@ -23,7 +24,8 @@ export class TransfertService {
         private readonly userService: UserService,
         private readonly historiqueService: HistoriquesService,
         private readonly compteCollecteService: CompteCollecteService,
-        private readonly compteReservationService: CompteReservationService
+        private readonly compteReservationService: CompteReservationService,
+        private readonly referralService: ReferralsService
     ) { }
 
     async transferInitializer(payload: MakeTransfertDto) {
@@ -150,6 +152,23 @@ export class TransfertService {
                 fees,
                 icon: "send"
             })
+
+            if(senderInfos.isFirstTransaction === true){
+                const ifUserHaveParent = await this.referralService.getNewComerParent(senderInfos)
+                if(ifUserHaveParent){
+                    const parent = await this.userService.getUserById(ifUserHaveParent.userId)
+                    await this.userService.updateUser(parent.id, {
+                        solde: (parseInt(parent.solde) + parseInt("500")).toString()
+                    })
+                    await this.referralService.updateReferral(ifUserHaveParent.id, {
+                        earned: (parseInt(ifUserHaveParent.earned) + parseInt("500")).toString()
+                    })
+                    await this.userService.updateUser(senderInfos.id, {
+                        isFirstTransaction: false
+                    })
+                }
+            }
+
             const senderPhoneNumber = senderInfos.numero
             const senderMessage = 
             `Votre transfert de ${amount} FCFA a bien été envoyé à ${getReceiverInfos.fullname} (${receiverNumber}).
@@ -188,7 +207,7 @@ Merci de votre confiance`
                 transactionType: TransactionType.TRANSFERT,
                 referenceTransaction: transfer.reference,
                 amount,
-                status: TransferType.SUCCESS,
+                status: TransferType.FAILED,
                 fees,
                 icon: 'send'
             })

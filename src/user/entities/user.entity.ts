@@ -60,7 +60,10 @@ export class User {
     cumulMensuelRestant: number
 
     @Column({nullable: true})
-    referralCode: number
+    referralCode: string
+
+    @Column({default: true})
+    isFirstTransaction: boolean
 
     @CreateDateColumn()
     createdAt: Date

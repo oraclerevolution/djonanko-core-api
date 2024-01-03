@@ -15,6 +15,7 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMobileMoneyDto } from './dto/update-mobile-money.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class UserService {
@@ -27,18 +28,33 @@ export class UserService {
     constructor(
         @InjectRepository(User) private readonly repository: Repository<User>,
         private readonly jwtService: JwtService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly referralService: ReferralsService
     ) { }
 
     async register(payload: CreateUserDto): Promise<User> {
         const user = this.repository.create({
             ...payload,
         })
+        const referralCode = this.generateReferralCode()
+        const isReferralCodeExist = await this.getUserByReferralCode(referralCode)
+        if(isReferralCodeExist){
+            user.referralCode = this.generateReferralCode()
+        }else{
+            user.referralCode = referralCode
+        }
         user.salt = await bcrypt.genSalt()
         user.password = await bcrypt.hash(user.password, user.salt)
 
+        
         try {
             await this.repository.save(user)
+            if(payload.referralCode){
+                const findAUser = await this.getUserByReferralCode(payload.referralCode)
+                if(findAUser){
+                    await this.referralService.createReferral({ userId: findAUser.id, newComer: user })
+                }
+            }
             const message = "Votre inscription sur Djonanko CI a bien été prise en compte. Merci de profiter pleinenement de nos services en toute sécurité."
             const phoneNumber = user.numero
             await this.sendSMSToUser({ phoneNumber, message })
@@ -96,6 +112,10 @@ export class UserService {
 
     async getUserById(id: number): Promise<User> {
         return await this.repository.findOne(id)
+    }
+
+    async getUserByReferralCode(code: string): Promise<User> {
+        return await this.repository.findOne({ where: { referralCode: code }})
     }
 
     async updateUser(id: number, user: UpdateUserDto,): Promise<UpdateResult> {
@@ -237,5 +257,14 @@ export class UserService {
         if(mobileMoney === "Moov"){
             return user.moovMoney
         }
+    }
+
+    private generateReferralCode(): string {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let reference = '';
+        for (let i = 0; i < 6; i++) {
+            reference += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return `${reference}`;
     }
 }

@@ -6,6 +6,7 @@ import { User } from './entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { FullAuthStrategy } from 'src/full-auth-guard/full-auth.strategy';
+import { ReferralsModule } from 'src/referrals/referrals.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { FullAuthStrategy } from 'src/full-auth-guard/full-auth.strategy';
         expiresIn: '10d'
       }
     }),
-    JwtModule
+    JwtModule,
+    ReferralsModule
   ],
   controllers: [UserController],
   providers: [

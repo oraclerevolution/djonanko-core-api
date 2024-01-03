@@ -17,6 +17,7 @@ import { TransactionResponse } from 'src/helper/enums/TransactionResponse.enum';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { PaymentDebitDto } from './dto/payment-debit.dto';
 import { PaymentExecDto } from './dto/payment-exec.dto';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class PaiementService {
@@ -26,6 +27,7 @@ export class PaiementService {
         @Inject(forwardRef(() => HistoriquesService)) private readonly historiqueService: HistoriquesService,
         private readonly compteCollecteService: CompteCollecteService,
         private readonly compteReservationService: CompteReservationService,
+        private readonly referralService: ReferralsService
     ) { }
 
     /**
@@ -136,6 +138,23 @@ export class PaiementService {
                 fees: fees,
                 icon: 'send'
             })
+
+            if(senderInfos.isFirstTransaction === true){
+                const ifUserHaveParent = await this.referralService.getNewComerParent(senderInfos)
+                if(ifUserHaveParent){
+                    const parent = await this.userService.getUserById(ifUserHaveParent.userId)
+                    await this.userService.updateUser(parent.id, {
+                        solde: (parseInt(parent.solde) + parseInt("500")).toString()
+                    })
+                    await this.referralService.updateReferral(ifUserHaveParent.id, {
+                        earned: (parseInt(ifUserHaveParent.earned) + parseInt("500")).toString()
+                    })
+                    await this.userService.updateUser(senderInfos.id, {
+                        isFirstTransaction: false
+                    })
+                }
+            }
+
             const senderPhoneNumber = senderInfos.numero
             const senderMessage =
             `Votre paiement de ${amount} FCFA a bien été effectué.

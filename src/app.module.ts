@@ -16,6 +16,7 @@ import { PaiementModule } from './paiement/paiement.module';
 import { CompteCollecteModule } from './compte-collecte/compte-collecte.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CompteReservationModule } from './compte-reservation/compte-reservation.module';
+import { ReferralsModule } from './referrals/referrals.module';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { CompteReservationModule } from './compte-reservation/compte-reservation
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, ReferralsModule
   ],
   controllers: [AppController],
   providers: [AppService],
