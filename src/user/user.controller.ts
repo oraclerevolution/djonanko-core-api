@@ -105,4 +105,13 @@ export class UserController {
         const number = await this.userService.getReceiverMobileMoney(phoneNumber, mobileMoney)
         return number
     }
+
+    @UseGuards(FullAuthGuard)
+    @Get('verify-if-number-exists')
+    async verifyIfNumberExists(
+        @Query('phoneNumber') phoneNumber: string
+    ): Promise<number>{
+        const number = await this.userService.verifyIfNumberExists(phoneNumber)
+        return number
+    }
 }

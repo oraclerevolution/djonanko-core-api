@@ -94,6 +94,19 @@ export class UserService {
         return await this.repository.createQueryBuilder("user").where("user.numero = :phoneNumber", { phoneNumber }).getOne()
     }
 
+    async verifyIfNumberExists(phoneNumber: string): Promise<number> {
+        const contact = await this.repository.find({
+            where: {
+                numero: phoneNumber
+            }
+        })
+        if(contact){
+            return 200
+        }else{
+            return 404
+        }
+    }
+
     async getUserById(id: number): Promise<User> {
         return await this.repository.findOne(id)
     }
