@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { AuthLog } from './entities/auth-log.entity';
 import { CreateAuthLogDto } from './dto/create-auth-log.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class AuthLogService {
     constructor(
-        private readonly repository: Repository<AuthLog>
+        @InjectRepository(AuthLog) private readonly repository: Repository<AuthLog>
     ) {}
 
     /**
