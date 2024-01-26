@@ -44,6 +44,9 @@ export class User {
     @Column({nullable: true,unique: true, name: 'moov_money'})
     moovMoney: string
 
+    @Column({nullable: true, enum: [1, 2, 3, 4], name:'favorite_operator'})
+    favoriteOperator: number
+
     @Column({nullable: false, default: false})
     premium: boolean
 
