@@ -15,6 +15,7 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMobileMoneyDto } from './dto/update-mobile-money.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { FavoriteOperator } from './interfaces/favorite-operator.interface';
 
 @Injectable()
 export class UserService {
@@ -71,6 +72,7 @@ export class UserService {
             const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`
             const phoneNumber = user.numero
             await this.sendSMSToUser({ phoneNumber, message })
+            console.log("otp", otp);
             return {
                 access_token: token,
                 user,
@@ -101,6 +103,7 @@ export class UserService {
             }
         })
         if(contact){
+            console.log(contact);
             return 200
         }else{
             return 404
@@ -205,6 +208,14 @@ export class UserService {
         return await this.repository.update(id, {
             password: hashedPassword
         })
+    }
+
+    async getUserFavoriteOperator(id: number): Promise<FavoriteOperator>{
+        const user = await this.repository.findOne(id)
+        return {
+            favoriteOperator: user.favoriteOperator,
+            phoneNumber: user.numero
+        }
     }
 
     async getUserMobileMoney(id: number, mobileMoney: string): Promise<string> {

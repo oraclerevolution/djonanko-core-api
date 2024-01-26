@@ -6,6 +6,7 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { UserAuth } from './enums/user-auth.enum';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
+import { FavoriteOperator } from './interfaces/favorite-operator.interface';
 
 @Controller('user')
 export class UserController {
@@ -113,5 +114,13 @@ export class UserController {
     ): Promise<number>{
         const number = await this.userService.verifyIfNumberExists(phoneNumber)
         return number
+    }
+
+    @UseGuards(FullAuthGuard)
+    @Get('get-user-favorite-operator')
+    async getUserFavoriteOperator(
+        @Query('id') id: number
+    ): Promise<FavoriteOperator>{
+        return await this.userService.getUserFavoriteOperator(id)
     }
 }
