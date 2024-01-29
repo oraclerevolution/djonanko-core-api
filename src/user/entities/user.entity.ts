@@ -66,7 +66,7 @@ export class User {
     cumulMensuelRestant: number
 
     @Column({nullable: true})
-    referralCode: number
+    referralCode: string
 
     @CreateDateColumn()
     createdAt: Date
