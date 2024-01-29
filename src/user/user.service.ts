@@ -45,7 +45,7 @@ export class UserService {
             await this.sendSMSToUser({ phoneNumber, message })
             return user
         } catch (error) {
-            console.log(error)
+            console.log("error", error)
             throw new Error("Something went wrong during registering user")
         }
     }
@@ -57,6 +57,10 @@ export class UserService {
         //if user doesn't exist, we throw an error
         if (!user) {
             throw new NotFoundException("Connexion impossible, l'utilisateur n'existe pas")
+        }
+
+        if(user.alreadyLogged === true){
+            throw new BadRequestException("Connexion impossible, l'utilisateur a déjà effectue une connexion")
         }
 
         const hashedPassword = await bcrypt.hash(password, user.salt)
@@ -81,6 +85,10 @@ export class UserService {
         } else {
             throw new UnauthorizedException("Connexion impossible, vérifiez vos identifiants")
         }
+    }
+
+    logout(userId: number) {
+        return this.repository.update(userId, { alreadyLogged: false })
     }
 
     generateVerificationCode() {

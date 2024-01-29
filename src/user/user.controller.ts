@@ -29,6 +29,14 @@ export class UserController {
     }
 
     @UseGuards(FullAuthGuard)
+    @Post('logout')
+    async logout(
+        @Query('userId') userId: number
+    ){
+        return await this.userService.logout(userId)
+    }
+
+    @UseGuards(FullAuthGuard)
     @Get('user-infos-by-number')
     async userInfos(
         @Query('phoneNumber') phoneNumber: string
