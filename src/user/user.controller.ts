@@ -48,9 +48,9 @@ export class UserController {
     @Get('user-balance')
     async userBalance(
         @Query('phoneNumber') phoneNumber: string
-    ): Promise<string> {
+    ): Promise<User> {
         const user = await this.userService.getUserByPhoneNumber(phoneNumber)
-        return user.solde
+        return user
     }
 
     @UseGuards(FullAuthGuard)
