@@ -29,7 +29,8 @@ export class TransfertService {
     async transferInitializer(payload: MakeTransfertDto) {
         const { senderPhoneNumber, receiverPhoneNumber, amount } = payload
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
-        if(parseInt(getSenderInfos.solde) < parseInt(amount)){
+        const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverPhoneNumber);
+        if(getSenderInfos.solde < amount){
             const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
             const transfer = new Transfert()
             transfer.amount = amount
@@ -43,6 +44,19 @@ export class TransfertService {
             transfer.amountAfterSending = (balanceAfterSending).toString()
             transfer.senderPhoneNumber = senderPhoneNumber
             transfer.receiverPhoneNumber = receiverPhoneNumber
+
+            await this.historiqueService.createHistorique({
+                sender: getSenderInfos,
+                receiver: getReceiverInfos,
+                senderIdentifiant: getSenderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
+                amount,
+                fees: transfer.fees,
+                status: "FAILED",
+                icon: "send"
+            })
             return {
                 transfer,
                 amount,
@@ -64,6 +78,20 @@ export class TransfertService {
             transfer.amountAfterSending = (balanceAfterSending).toString()
             transfer.senderPhoneNumber = senderPhoneNumber
             transfer.receiverPhoneNumber = receiverPhoneNumber
+
+            await this.historiqueService.createHistorique({
+                sender: getSenderInfos,
+                receiver: getReceiverInfos,
+                senderIdentifiant: getSenderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
+                amount,
+                fees: transfer.fees,
+                status: "FAILED",
+                icon: "send"
+            })
+
             return {
                 transfer,
                 amount,
