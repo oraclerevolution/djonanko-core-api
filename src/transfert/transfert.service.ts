@@ -29,28 +29,72 @@ export class TransfertService {
     async transferInitializer(payload: MakeTransfertDto) {
         const { senderPhoneNumber, receiverPhoneNumber, amount } = payload
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
-        const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
-        const transfer = new Transfert()
-        transfer.amount = amount
-        if (getSenderInfos.premium === true) {
-            transfer.fees = "0"
-        } else {
-            transfer.fees = (0.01 * parseInt(amount)).toString()
-        }
-        transfer.amountBeforeSending = getSenderInfos.solde
-        transfer.reference = this.generateReference()
-        transfer.amountAfterSending = (balanceAfterSending).toString()
-        transfer.senderPhoneNumber = senderPhoneNumber
-        transfer.receiverPhoneNumber = receiverPhoneNumber
-
-        await this.repository.save(transfer)
-        return {
-            transfer,
-            amount,
-            fees: transfer.fees,
-            senderInfos: getSenderInfos,
-            status: TransactionResponse.SUCCESS,
-            receiverNumber: receiverPhoneNumber
+        if(getSenderInfos.solde < amount){
+            const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
+            const transfer = new Transfert()
+            transfer.amount = amount
+            if (getSenderInfos.premium === true) {
+                transfer.fees = "0"
+            }else{
+                transfer.fees = (0.01 * parseInt(amount)).toString()
+            }
+            transfer.amountBeforeSending = getSenderInfos.solde
+            transfer.reference = this.generateReference()
+            transfer.amountAfterSending = (balanceAfterSending).toString()
+            transfer.senderPhoneNumber = senderPhoneNumber
+            transfer.receiverPhoneNumber = receiverPhoneNumber
+            return {
+                transfer,
+                amount,
+                fees: transfer.fees,
+                senderInfos: getSenderInfos,
+                status: TransactionResponse.INSUFFICIENT_FUNDS
+            }
+        }else if(parseInt(amount) > getSenderInfos.cumulMensuelRestant){
+            const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
+            const transfer = new Transfert()
+            transfer.amount = amount
+            if (getSenderInfos.premium === true) {
+                transfer.fees = "0"
+            }else{
+                transfer.fees = (0.01 * parseInt(amount)).toString()
+            }
+            transfer.amountBeforeSending = getSenderInfos.solde
+            transfer.reference = this.generateReference()
+            transfer.amountAfterSending = (balanceAfterSending).toString()
+            transfer.senderPhoneNumber = senderPhoneNumber
+            transfer.receiverPhoneNumber = receiverPhoneNumber
+            return {
+                transfer,
+                amount,
+                fees: transfer.fees,
+                senderInfos: getSenderInfos,
+                status: TransactionResponse.MONTHLY_LIMIT_REACHED
+            }
+        }else{
+            const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
+            const transfer = new Transfert()
+            transfer.amount = amount
+            if (getSenderInfos.premium === true) {
+                transfer.fees = "0"
+            } else {
+                transfer.fees = (0.01 * parseInt(amount)).toString()
+            }
+            transfer.amountBeforeSending = getSenderInfos.solde
+            transfer.reference = this.generateReference()
+            transfer.amountAfterSending = (balanceAfterSending).toString()
+            transfer.senderPhoneNumber = senderPhoneNumber
+            transfer.receiverPhoneNumber = receiverPhoneNumber
+    
+            await this.repository.save(transfer)
+            return {
+                transfer,
+                amount,
+                fees: transfer.fees,
+                senderInfos: getSenderInfos,
+                status: TransactionResponse.SUCCESS,
+                receiverNumber: receiverPhoneNumber
+            }
         }
     }
 
@@ -85,7 +129,7 @@ export class TransfertService {
     async sendTransfer(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, transfer: Transfert, fees: string) {
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
-            solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString()
+            solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString(),
         })
         if (updateReceiverBalance.affected === 1) {
             await this.compteReservationService.updateCompteReservation(reservation.id, {
@@ -93,6 +137,9 @@ export class TransfertService {
             })
             await this.repository.update(transfer.id, {
                 status: TransferType.SUCCESS
+            })
+            await this.userService.updateUser(senderInfos.id, {
+                cumulMensuelRestant: getReceiverInfos.cumulMensuelRestant - parseInt(amount)
             })
             await this.historiqueService.createHistorique({
                 sender: senderInfos,
@@ -103,6 +150,7 @@ export class TransfertService {
                 referenceTransaction: transfer.reference,
                 amount,
                 fees,
+                status: "SUCCESS",
                 icon: "send"
             })
             return {
@@ -124,6 +172,7 @@ export class TransfertService {
                 referenceTransaction: transfer.reference,
                 amount,
                 fees,
+                status: "FAILED",
                 icon: 'send'
             })
             return {

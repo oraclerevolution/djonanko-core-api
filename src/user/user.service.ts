@@ -77,6 +77,7 @@ export class UserService {
             const phoneNumber = user.numero
             await this.sendSMSToUser({ phoneNumber, message })
             console.log("otp", otp);
+            this.updateUser(user.id,{ alreadyLogged: true })
             return {
                 access_token: token,
                 user,

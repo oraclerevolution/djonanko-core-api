@@ -133,6 +133,7 @@ export class PaiementService {
                 transactionType: TransactionType.PAIEMENT,
                 amount: amount,
                 fees: fees,
+                status: "SUCCESS",
                 icon: 'send'
             })
             return {
@@ -154,6 +155,7 @@ export class PaiementService {
                 transactionType: TransactionType.PAIEMENT,
                 amount: amount,
                 fees: fees,
+                status: "FAILED",
                 icon: 'send'
             })
             return {
@@ -206,6 +208,7 @@ export class PaiementService {
                 referenceTransaction: "ABONNEMENT",
                 amount: "2000",
                 fees: "0",
+                status: "SUCCESS",
                 icon: 'sync'
             })
             await this.compteCollecteService.createCompteCollect({

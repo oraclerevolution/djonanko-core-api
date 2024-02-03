@@ -43,6 +43,9 @@ export class Historique {
     @Column()
     fees: string;
 
+    @Column({enum: ["SUCCESS", "FAILED", "PENDING"], default: "PENDING"})
+    status: string
+
     @Column()
     icon: string;
 
