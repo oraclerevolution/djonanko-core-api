@@ -29,7 +29,7 @@ export class TransfertService {
     async transferInitializer(payload: MakeTransfertDto) {
         const { senderPhoneNumber, receiverPhoneNumber, amount } = payload
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
-        if(getSenderInfos.solde < amount){
+        if(parseInt(getSenderInfos.solde) < parseInt(amount)){
             const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
             const transfer = new Transfert()
             transfer.amount = amount
