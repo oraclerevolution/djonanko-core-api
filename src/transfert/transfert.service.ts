@@ -30,7 +30,7 @@ export class TransfertService {
         const { senderPhoneNumber, receiverPhoneNumber, amount } = payload
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverPhoneNumber);
-        if(getSenderInfos.solde < amount){
+        if(parseInt(getSenderInfos.solde) < parseInt(amount)){
             const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
             const transfer = new Transfert()
             transfer.amount = amount
