@@ -181,6 +181,18 @@ export class TransfertService {
                 status: "SUCCESS",
                 icon: "send"
             })
+            await this.historiqueService.createHistorique({
+                sender: senderInfos,
+                receiver: getReceiverInfos,
+                senderIdentifiant: senderInfos.id,
+                receiverIdentifiant: getReceiverInfos.id,
+                transactionType: TransactionType.TRANSFERT,
+                referenceTransaction: transfer.reference,
+                amount,
+                fees,
+                status: "SUCCESS",
+                icon: "arrow-down"
+            })
             return {
                 status: TransactionResponse.SUCCESS
             }
