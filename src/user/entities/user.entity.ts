@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserType } from "../enums/user-type.enum";
 
 @Entity({
     name: 'users'
@@ -22,6 +23,9 @@ export class User {
 
     @Column()
     password: string
+
+    @Column({nullable: true, default: UserType.USER, enum: UserType})
+    userType: UserType
 
     @Column({default: false})
     isVerified: boolean
