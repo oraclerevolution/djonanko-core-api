@@ -20,7 +20,7 @@ export class PostgresDBConfigService implements TypeOrmOptionsFactory {
             synchronize: true,
             entities: ['dist/**/*.entity{.ts,.js}'],
             autoLoadEntities: true,
-            ssl: HelperService.getConfigBoolValue(this.configService, 'TYPEORM_SSL'),
+            ssl: true,
             migrations:['dist/migrations/**/*{.ts,.js}'],
             migrationsTableName: this.configService.get<string>('TYPEORM_MIGRATIONS_TABLE_NAME') ?? 'migrations',
             migrationsRun: false
