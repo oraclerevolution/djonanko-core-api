@@ -14,7 +14,7 @@ import { FullAuthStrategy } from 'src/full-auth-guard/full-auth.strategy';
     JwtModule.register({
       secret: 'secret',
       signOptions: {
-        expiresIn: '1d'
+        expiresIn: '30d'
       }
     }),
     JwtModule
