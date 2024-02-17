@@ -17,6 +17,7 @@ import { TransactionResponse } from 'src/helper/enums/TransactionResponse.enum';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { PaymentDebitDto } from './dto/payment-debit.dto';
 import { PaymentExecDto } from './dto/payment-exec.dto';
+import { PaymentRequestDto } from './dto/payment-request.dto';
 
 @Injectable()
 export class PaiementService {
@@ -255,5 +256,41 @@ export class PaiementService {
                 reference
             }
         })
+    }
+
+    async paymentRequest(payload: PaymentRequestDto): Promise<Paiement> {
+        const { amount, senderPhoneNumber, receiverPhoneNumber } = payload
+        const debitedUser = await this.userService.getUserByPhoneNumber(senderPhoneNumber)
+        const creditedUser = await this.userService.getUserByPhoneNumber(receiverPhoneNumber)
+        const paymentRequest = this.repository.create({
+            amount,
+            amountBeforeSending: debitedUser.solde,
+            amountAfterSending: (parseInt(debitedUser.solde) - parseInt(amount)).toString(),
+            senderPhoneNumber: senderPhoneNumber,
+            fees: "0",
+            reference: this.generateReference(),
+            receiverPhoneNumber: receiverPhoneNumber,
+            status: PaiementType.PAYMENT_REQUEST_PENDING
+        })
+
+        const result = await this.repository.save(paymentRequest)
+
+        if(result){
+            //if payment request is successful we create an history
+            await this.historiqueService.createHistorique({
+                sender: debitedUser,
+                receiver: creditedUser,
+                senderIdentifiant: debitedUser.id,
+                receiverIdentifiant: creditedUser.id,
+                referenceTransaction: result.reference,
+                transactionType: TransactionType.PAIEMENT,
+                amount: amount,
+                fees: "0",
+                status: "PENDING",
+                icon: 'send'
+            })
+        }
+
+        return result
     }
 }

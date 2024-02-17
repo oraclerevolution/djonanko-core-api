@@ -8,6 +8,7 @@ import { User } from 'src/user/entities/user.entity';
 import { PaymentDebitDto } from './dto/payment-debit.dto';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
+import { PaymentRequestDto } from './dto/payment-request.dto';
 
 @UseGuards(FullAuthGuard)
 @Controller('paiement')
@@ -55,5 +56,12 @@ export class PaiementController {
         @Query('reference') reference: string
     ){
         return await this.paiementService.getPaymentByReference(reference)
+    }
+
+    @Post('create_payment_request')
+    async createPaymentRequest(
+        @Body() payload: PaymentRequestDto
+    ){
+        return await this.paiementService.paymentRequest(payload)
     }
 }
