@@ -28,7 +28,7 @@ export class UserController {
         return await this.userService.login(payload)
     }
 
-    @UseGuards(FullAuthGuard)
+    // @UseGuards(FullAuthGuard)
     @Post('logout')
     async logout(
         @Query('userId') userId: number

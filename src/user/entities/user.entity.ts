@@ -33,6 +33,9 @@ export class User {
     @Column({default: false})
     isActive2fa: boolean
 
+    @Column({nullable: true})
+    isMerchant: boolean
+
     @Column()
     salt: string
 
