@@ -283,7 +283,7 @@ export class PaiementService {
                 senderIdentifiant: debitedUser.id,
                 receiverIdentifiant: creditedUser.id,
                 referenceTransaction: result.reference,
-                transactionType: TransactionType.PAIEMENT,
+                transactionType: TransactionType.PAYMENT_REQUEST,
                 amount: amount,
                 fees: "0",
                 status: "PENDING",

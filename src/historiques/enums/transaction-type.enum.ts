@@ -3,5 +3,6 @@ export enum TransactionType {
     RETRAIT = 'RETRAIT',
     PAIEMENT = 'PAIEMENT',
     ABONNEMENT = 'ABONNEMENT',
-    DEPOT = 'DEPOT'
+    DEPOT = 'DEPOT',
+    PAYMENT_REQUEST = 'REQUETE DE PAIEMENT'
 }
