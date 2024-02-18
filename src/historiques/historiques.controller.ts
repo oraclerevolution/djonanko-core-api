@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { HistoriquesService } from './historiques.service';
 import { CreateHistoriqueDto } from './dto/create-historique.dto';
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 import { GetUser } from 'src/user/decorators/get-user.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { UpdateHistoriqueDto } from './dto/update-historique.dto';
 
 @UseGuards(FullAuthGuard)
 @Controller('historiques')
@@ -67,5 +68,13 @@ export class HistoriquesController {
         @Query('month') month: number
     ){
         return await this.historiquesService.getTotalReceivedForThisMonth(id, month)
+    }
+
+    @Patch('update-historique')
+    async updateHistorique(
+        @Body() historique: UpdateHistoriqueDto,
+        @Query('id') id: string
+    ){
+        return await this.historiquesService.updateHistorique(id, historique)
     }
 }

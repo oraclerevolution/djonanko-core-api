@@ -8,6 +8,7 @@ import { HistoriqueFilterDto } from './dto/historique-filter.dto';
 import { PaiementService } from 'src/paiement/paiement.service';
 import { TransfertService } from 'src/transfert/transfert.service';
 import { UserService } from 'src/user/user.service';
+import { UpdateHistoriqueDto } from './dto/update-historique.dto';
 
 @Injectable()
 export class HistoriquesService {
@@ -201,5 +202,13 @@ export class HistoriquesService {
         const totalAmount = historiques.reduce((sum, historique) => sum + parseInt(historique.amount), 0);
 
         return totalAmount
+    }
+
+    async updateHistorique(id: string,historique: UpdateHistoriqueDto){
+        return await this.repository.update(id, historique)
+    }
+
+    async getHistoriqueByReference(reference: string): Promise<Historique>{
+        return await this.repository.findOne({where: {referenceTransaction: reference}})
     }
 }

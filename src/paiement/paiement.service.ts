@@ -1,7 +1,7 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paiement } from './entities/paiement.entity';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { HistoriquesService } from 'src/historiques/historiques.service';
 import { MakePaiementDto } from './dto/make-paiement.dto';
@@ -18,6 +18,7 @@ import { CompteReservation } from 'src/compte-reservation/entities/compte-reserv
 import { PaymentDebitDto } from './dto/payment-debit.dto';
 import { PaymentExecDto } from './dto/payment-exec.dto';
 import { PaymentRequestDto } from './dto/payment-request.dto';
+import { ValidatePaymentDto } from './dto/validate-payment.dto';
 
 @Injectable()
 export class PaiementService {
@@ -292,5 +293,68 @@ export class PaiementService {
         }
 
         return result
+    }
+
+    async validatePaymentRequest(payload: ValidatePaymentDto): Promise<PaymentExecDto> {
+        const {reference} = payload
+        try {
+            const paymentRequest = await this.repository.findOne({
+                where: {
+                    reference
+                }
+            })
+            const paymentRequestHistory =  await this.historiqueService.getHistoriqueByReference(reference)
+            const debitedUser = await this.userService.getUserByPhoneNumber(paymentRequest.senderPhoneNumber)
+            const creditedUser = await this.userService.getUserByPhoneNumber(paymentRequest.receiverPhoneNumber)
+            //on débite la somme du paiement
+            const cost = paymentRequest.amount
+            const balanceAfterSending = parseInt(debitedUser.solde) - parseInt(cost);
+            await this.userService.updateUser(debitedUser.id,{
+                solde: balanceAfterSending.toString()
+            })
+            //apres avoir debiter la somme on credite le compte de reservation
+            const reservation = await this.compteReservationService.createCompteReservation({
+                amount:cost,
+                fees: "0",
+                transactionStatus: "IN PROGRESS",
+                transactionType: TransactionType.PAYMENT_REQUEST
+            })
+            //on credite le compte du beneficiaire
+            const updateReceiverBalance = await this.userService.updateUser(creditedUser.id,{
+                solde: (parseInt(creditedUser.solde) + parseInt(cost)).toString(),
+            })
+            if(updateReceiverBalance.affected === 1){
+                //on update le statut de paiement de la requête de paiement
+                await this.repository.update(paymentRequest.id, {
+                    status: PaiementType.PAYMENT_REQUEST_SUCCESS
+                })
+                //on update le statut de la requête de paiement dans l'historique
+                await this.historiqueService.updateHistorique(paymentRequestHistory.id, {
+                    status: "SUCCESS"
+                })
+                //on update le statut de la reservation
+                await this.compteReservationService.updateCompteReservation(reservation.id, {
+                    transactionStatus: "COMPLETED",
+                })
+            }
+
+            return {
+                status: TransactionResponse.SUCCESS
+            }
+        } catch (error) {
+            console.log("An error occurred:", error);
+            return {
+                status: TransactionResponse.ERROR
+            }
+        }
+    }
+
+    async getAllPendingPaymentForAMerchant(receiverPhoneNumber: string): Promise<Paiement[]> {
+        return await this.repository.find({
+            where: {
+                receiverPhoneNumber,
+                status: PaiementType.PAYMENT_REQUEST_PENDING
+            }
+        })
     }
 }

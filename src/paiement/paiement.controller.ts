@@ -9,6 +9,7 @@ import { PaymentDebitDto } from './dto/payment-debit.dto';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 import { PaymentRequestDto } from './dto/payment-request.dto';
+import { ValidatePaymentDto } from './dto/validate-payment.dto';
 
 @UseGuards(FullAuthGuard)
 @Controller('paiement')
@@ -63,5 +64,19 @@ export class PaiementController {
         @Body() payload: PaymentRequestDto
     ){
         return await this.paiementService.paymentRequest(payload)
+    }
+
+    @Post('validate-payment-request')
+    async validatePaymentRequest(
+        @Body() payload: ValidatePaymentDto
+    ){
+        return await this.paiementService.validatePaymentRequest(payload)
+    }
+
+    @Get('all-pending-payment-for-a-merchant')
+    async getAllPendingPaymentForAMerchant(
+        @Query('receiverPhoneNumber') receiverPhoneNumber: string
+    ){
+        return await this.paiementService.getAllPendingPaymentForAMerchant(receiverPhoneNumber)
     }
 }
