@@ -24,9 +24,6 @@ export class Pos {
     @ManyToMany(type => Communes, communes => communes.id)
     communeId: Communes;
 
-    @ManyToOne(type => Communes, communes => communes.name)
-    communeName: Communes
-
     @CreateDateColumn()
     createdAt: Date;
 
