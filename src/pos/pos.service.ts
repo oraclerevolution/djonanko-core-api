@@ -29,15 +29,24 @@ export class PosService {
         pointofsale.openHours = payload.openHours;
         pointofsale.closeHours = payload.closeHours;
         pointofsale.communeId = payload.communeId;
-        pointofsale.communeName = payload.communeName;
         return await this.Posrepository.save(pointofsale);
     }
 
     async searchPosByCommune(communeName: string): Promise<Pos[]> {
-
+        const allCommunes = await this.communesRepository.find();
+        //appliquer un filtre pour rechercher le nom de la commune saisi par le user
+        const filteredCommunes = allCommunes.filter(commune => {
+            if (commune.name === communeName) {
+                return commune
+            }else{
+                return{
+                    message:"Désolé, nous n'avons pas de point de vente dans cette commune !"
+                }
+            }
+        })
         return await this.Posrepository.find({
             where: {
-                communeName
+                communeId: filteredCommunes[0].id
             }
         })
     }
