@@ -32,10 +32,8 @@ export class PosController {
         return await this.posService.searchPosByCommune(name);
     }
 
-    @Get('get-a-commune')
-    async getACommune(
-        @Query('name') name: string
-    ){
-        return await this.posService.getACommune(name);
+    @Get('get-all-commune')
+    async getACommune(){
+        return await this.posService.getAllCommune();
     }
 }
