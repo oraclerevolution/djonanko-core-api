@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { GetMerchantEmployeesDto } from './dto/get-merchant-employees.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
 @Injectable()
 export class EmployeeService {
@@ -37,5 +38,14 @@ export class EmployeeService {
             }
         });
         return { commercants, count };
-    }   
+    }
+
+    async update(id: string, payload: UpdateEmployeeDto): Promise<Employee> {
+        await this.repository.update(id, payload);
+        return await this.repository.findOne(id);
+    }
+    
+    async delete(id: string): Promise<void> {
+        await this.repository.delete(id);
+    }
 }
