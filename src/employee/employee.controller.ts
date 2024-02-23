@@ -30,6 +30,11 @@ export class EmployeeController {
         return await this.employeeService.getEmployees(merchantId);
     }
 
+    @Patch('block-employee')
+    async blockEmployee(@Query('id') id: number): Promise<void> {
+        await this.employeeService.blockEmployee(id);
+    }
+
     @Patch('update')
     async updateCategorieMarchands(
         @Query('id') id: string,

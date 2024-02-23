@@ -40,6 +40,10 @@ export class EmployeeService {
         return { commercants, count };
     }
 
+    async blockEmployee(id: number): Promise<void> {
+        await this.userService.updateUser(id, { isActive: false });
+    }
+
     async update(id: string, payload: UpdateEmployeeDto): Promise<Employee> {
         await this.repository.update(id, payload);
         return await this.repository.findOne(id);
