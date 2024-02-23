@@ -18,6 +18,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { CompteReservationModule } from './compte-reservation/compte-reservation.module';
 import { AuthLogModule } from './auth-log/auth-log.module';
 import { PosModule } from './pos/pos.module';
+import { EmployeeModule } from './employee/employee.module';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { PosModule } from './pos/pos.module';
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule
   ],
   controllers: [AppController],
   providers: [AppService],
