@@ -1,0 +1,6 @@
+export enum MerchantType {
+    TRANSPORT = 'TRANSPORT',
+    MAQUIS = 'MAQUIS',
+    RESTAURANT = 'RESTAURANT',
+    COMMERCANT = 'COMMERCANT',
+}
