@@ -357,4 +357,12 @@ export class PaiementService {
             }
         })
     }
+
+    async getPaiementByReceiverNumber(receiverPhoneNumber: string): Promise<Paiement[]> {
+        return await this.repository.find({
+            where: {
+                receiverPhoneNumber
+            }
+        })
+    }
 }

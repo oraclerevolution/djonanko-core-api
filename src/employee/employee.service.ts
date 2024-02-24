@@ -7,12 +7,17 @@ import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { GetMerchantEmployeesDto } from './dto/get-merchant-employees.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { PaiementService } from 'src/paiement/paiement.service';
+import { TransfertService } from 'src/transfert/transfert.service';
+import { EmployeeActivityDto } from './dto/employeeActivity.dto';
 
 @Injectable()
 export class EmployeeService {
     constructor(
         @InjectRepository(Employee) private readonly repository: Repository<Employee>,
-        private readonly userService: UserService
+        private readonly userService: UserService,
+        private readonly paiementService: PaiementService,
+        private readonly transfertService: TransfertService
     ) {}
 
     async create(payload: CreateEmployeeDto, user: User): Promise<Employee> {
@@ -42,6 +47,16 @@ export class EmployeeService {
 
     async blockEmployee(id: number): Promise<void> {
         await this.userService.updateUser(id, { isActive: false });
+    }
+
+    async getAnEmployeeActivity(id: string): Promise<EmployeeActivityDto> {
+        const employee = await this.repository.findOne(id);
+        const employeePaiements = await this.paiementService.getPaiementByReceiverNumber(employee.phoneNumber);
+        const employeeTransferts = await this.transfertService.getTransferByReceiverNumber(employee.phoneNumber);
+        return {
+            paiements: employeePaiements,
+            transferts: employeeTransferts
+        };
     }
 
     async update(id: string, payload: UpdateEmployeeDto): Promise<Employee> {
