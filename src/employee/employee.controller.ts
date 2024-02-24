@@ -7,6 +7,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GetUser } from 'src/user/decorators/get-user.decorator';
 import { GetMerchantEmployeesDto } from './dto/get-merchant-employees.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { EmployeeActivityDto } from './dto/employeeActivity.dto';
 
 @UseGuards(FullAuthGuard)
 @Controller('employee')
@@ -33,6 +34,11 @@ export class EmployeeController {
     @Patch('block-employee')
     async blockEmployee(@Query('id') id: number): Promise<void> {
         await this.employeeService.blockEmployee(id);
+    }
+
+    @Get('employee-activity')
+    async getAnEmployeeActivity(@Query('id') id: string): Promise<EmployeeActivityDto> {
+        return await this.employeeService.getAnEmployeeActivity(id);
     }
 
     @Patch('update')

@@ -258,4 +258,12 @@ export class TransfertService {
             }
         })
     }
+
+    async getTransferByReceiverNumber(receiverPhoneNumber: string): Promise<Transfert[]> {
+        return await this.repository.find({
+            where: {
+                receiverPhoneNumber
+            }
+        })
+    }
 }
