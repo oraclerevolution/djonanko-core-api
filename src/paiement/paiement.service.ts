@@ -114,7 +114,7 @@ export class PaiementService {
      * @param {string} fees - The fees associated with the payment.
      * @return {Promise<PaymentExecDto>} - The payment execution response.
      */
-    async sendPayment(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, paiement: Paiement, fees: string): Promise<PaymentExecDto> {
+    async sendPayment(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, paiement: Paiement, fees: string, abonnement?:boolean): Promise<PaymentExecDto> {
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
             solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString()
@@ -160,6 +160,12 @@ export class PaiementService {
                 status: "FAILED",
                 icon: 'send'
             })
+            if(abonnement && abonnement === true){
+                await this.userService.updateUser(senderInfos.id,{
+                    premium: true,
+                    premiumActivated: true
+                })
+            }
             return {
                 status: TransactionResponse.ERROR
             }

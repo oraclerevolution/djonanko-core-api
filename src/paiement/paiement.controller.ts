@@ -46,7 +46,8 @@ export class PaiementController {
             receiverNumber: string, 
             amount: string, 
             paiement: Paiement, 
-            fees: string
+            fees: string,
+            abonnement?:boolean
         }
     ){
         return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.fees)
