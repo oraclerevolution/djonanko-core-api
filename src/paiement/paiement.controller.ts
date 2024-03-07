@@ -10,6 +10,7 @@ import { CompteReservation } from 'src/compte-reservation/entities/compte-reserv
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 import { PaymentRequestDto } from './dto/payment-request.dto';
 import { ValidatePaymentDto } from './dto/validate-payment.dto';
+import { MakeAbonnementDto } from './dto/abonnement.dto';
 
 @UseGuards(FullAuthGuard)
 @Controller('paiement')
@@ -79,5 +80,12 @@ export class PaiementController {
         @Query('receiverPhoneNumber') receiverPhoneNumber: string
     ){
         return await this.paiementService.getAllPendingPaymentForAMerchant(receiverPhoneNumber)
+    }
+
+    @Post('make-subscription')
+    async makeAbonnement(
+        @Body() payload: MakeAbonnementDto
+    ){
+        return await this.paiementService.makeAbonnement(payload)
     }
 }
