@@ -191,19 +191,42 @@ export class PaiementService {
                 transactionStatus: "IN PROGRESS",
                 transactionType: TransactionType.ABONNEMENT
             })
-            //credit collect account
+            //create paiement
+            const paiement = new Paiement();
+            paiement.amount = amount;
+            if (getSenderInfos.premium === true) {
+                paiement.fees = "0";
+            } else {
+                paiement.fees = "0";
+            }
+            paiement.amountBeforeSending = getSenderInfos.solde;
+            paiement.reference = this.generateReference();
+            paiement.amountAfterSending = (parseInt(getSenderInfos.solde) - parseInt(amount)).toString();
+            paiement.senderPhoneNumber = senderPhoneNumber;
+            paiement.receiverPhoneNumber = receiverPhoneNumber;
+            paiement.status = PaiementType.PENDING
+            await this.repository.save(paiement);
+            
+            //credit collect account if reservation is created
             if (reservation) {
                 const credit = await this.compteCollecteService.createCompteCollect({
                     amount: amount,
                     collectType: CollectType.ABONNEMENT
                 })
-                if (credit) {
+                const creditCollectAccount = await this.userService.updateUser(getSenderInfos.id, {
+                    solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString()
+                })
+                if (credit && creditCollectAccount) {
                     await this.userService.updateUser(getSenderInfos.id, {
                         premium: true,
                         premiumActivated: true
                     })
                     await this.compteReservationService.updateCompteReservation(reservation.id, {
                         transactionStatus: "COMPLETED"
+                    })
+                    //update paiement status
+                    await this.repository.update(paiement.id, {
+                        status: PaiementType.SUCCESS
                     })
                     //create historique
                     await this.historiqueService.createHistorique({
@@ -219,11 +242,15 @@ export class PaiementService {
                         icon: 'send'
                     })
                     return {
-                        status: TransactionResponse.SUCCESS
+                        status: TransactionResponse.SUCCESS,
                     }
                 } else {
                     await this.compteReservationService.updateCompteReservation(reservation.id, {
                         transactionStatus: "FAILED"
+                    })
+                    //update paiement status
+                    await this.repository.update(paiement.id, {
+                        status: PaiementType.FAILED
                     })
                     // create historique
                     await this.historiqueService.createHistorique({
@@ -239,17 +266,21 @@ export class PaiementService {
                         icon: 'send'
                     })
                     return {
-                        status: TransactionResponse.ERROR
+                        status: TransactionResponse.ERROR,
+                        message: "Une erreur s'est produite lors du paiement, veuillez reessayer."
                     }
                 }
             } else {
                 return {
-                    status: TransactionResponse.ERROR
+                    status: TransactionResponse.ERROR,
+                    message: "Une erreur s'est produite lors du paiement, veuillez reessayer."
+
                 }
             }
         } else {
             return {
-                status: TransactionResponse.ERROR
+                status: TransactionResponse.ERROR,
+                message: "Une erreur s'est produite lors du paiement, veuillez reessayer."
             }
         }
 
