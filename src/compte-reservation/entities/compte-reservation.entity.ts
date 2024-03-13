@@ -15,6 +15,9 @@ export class CompteReservation {
     @Column()
     fees: string
 
+    @Column({name:'funds_to_send', nullable: true})
+    fundsToSend: string
+
     @Column({
         name: 'transaction_status', 
         type:"enum", 
