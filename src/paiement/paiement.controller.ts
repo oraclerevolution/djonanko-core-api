@@ -11,6 +11,7 @@ import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 import { PaymentRequestDto } from './dto/payment-request.dto';
 import { ValidatePaymentDto } from './dto/validate-payment.dto';
 import { MakeAbonnementDto } from './dto/abonnement.dto';
+import { Historique } from 'src/historiques/entities/historique.entity';
 
 @UseGuards(FullAuthGuard)
 @Controller('paiement')
@@ -48,10 +49,11 @@ export class PaiementController {
             amount: string, 
             paiement: Paiement, 
             fees: string,
-            abonnement?:boolean
+            abonnement?:boolean,
+            historique: Historique
         }
     ){
-        return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.fees)
+        return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.fees, payload.historique )
     }
 
     @Get('paiementByReference')

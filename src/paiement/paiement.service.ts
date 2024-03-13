@@ -49,9 +49,6 @@ export class PaiementService {
         let historique: CreateHistoriqueResultDto = null
 
         if (newPayment.status === TransactionResponse.SUCCESS) {
-
-        }
-        if (newPayment) {
             historique = await this.createHistorique({
                 sender: getSenderInfos,
                 receiver: getReceiverInfos,
@@ -64,7 +61,21 @@ export class PaiementService {
                 status: "PENDING",
                 icon: 'send'
             })
+
+            return {
+                payment: newPayment.paiement,
+                amount: amount,
+                historique: historique.historique,
+                fees: newPayment.paiement.fees,
+                senderInfos: getSenderInfos,
+                status: TransactionResponse.SUCCESS,
+                receiverNumber: receiverPhoneNumber
+            }
+            
         } else {
+            await this.repository.update(newPayment.paiement.id, {
+                status: "FAILED"
+            })
             return {
                 payment: newPayment.paiement,
                 amount: amount,
