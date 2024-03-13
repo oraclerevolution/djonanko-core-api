@@ -31,9 +31,10 @@ export class PaiementService {
         @Inject(forwardRef(() => HistoriquesService)) private readonly historiqueService: HistoriquesService,
         private readonly compteCollecteService: CompteCollecteService,
         private readonly compteReservationService: CompteReservationService,
-        private readonly compteReservationNumber: string = "0102030406",
-        private readonly compteCollectNumber: string = "0102030405"
     ) { }
+
+    private readonly compteReservationNumber: string = "0102030406"
+    private readonly compteCollectNumber: string = "0102030405"
 
     /**
      * Initializes a payment with the given payload.
