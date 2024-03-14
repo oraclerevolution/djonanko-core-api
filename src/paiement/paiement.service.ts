@@ -146,7 +146,7 @@ export class PaiementService {
         })
         if (reservation) {
             const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_RESERVATION'))
-            const balanceAfterSending = parseInt(user.solde) + parseInt(amount) + fees;
+            const balanceAfterSending = parseInt(user.solde) + parseInt(amount) + parseInt(fees);
             const credit = await this.userService.updateUser(user.id, {
             solde: balanceAfterSending.toString(),
         })
