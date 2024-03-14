@@ -5,7 +5,7 @@ import { TransactionResponse } from "src/helper/enums/TransactionResponse.enum"
 
 export interface PaymentDebitDto {
     paiement: Paiement
-    reservation: CompteReservation,
+    reservation: CompteReservation | null,
     amount: string,
     receiverNumber: string,
     senderInfos: User,

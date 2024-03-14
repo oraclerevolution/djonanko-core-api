@@ -12,7 +12,7 @@ export class Paiement {
     @Column()
     amount: string;
 
-    @Column({name: 'amount_before_sending'})
+    @Column({nullable: true, name: 'amount_before_sending'})
     amountBeforeSending: string;
 
     @Column({name: 'amount_after_sending'})
