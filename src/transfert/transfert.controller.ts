@@ -5,6 +5,7 @@ import { Transfert } from './entities/transfert.entity';
 import { User } from 'src/user/entities/user.entity';
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
+import { Historique } from 'src/historiques/entities/historique.entity';
 
 @UseGuards(FullAuthGuard)
 @Controller('transfert')
@@ -41,10 +42,11 @@ export class TransfertController {
             receiverNumber: string,
             amount: string,
             transfer: Transfert,
-            fees: string
+            fees: string,
+            historique: Historique
         }
     ){
-        return await this.transfertService.sendTransfer(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.transfer, payload.fees)
+        return await this.transfertService.sendTransfer(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.transfer, payload.fees, payload.historique)
     }
 
     @Get('transferByReference')

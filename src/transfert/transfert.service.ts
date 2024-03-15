@@ -15,6 +15,8 @@ import { CompteReservationService } from 'src/compte-reservation/compte-reservat
 import { CompteReservation } from 'src/compte-reservation/entities/compte-reservation.entity';
 import { Historique } from 'src/historiques/entities/historique.entity';
 import { HistoriqueFilterDto } from 'src/historiques/dto/historique-filter.dto';
+import { ConfigService } from '@nestjs/config';
+import { CreateHistoriqueDto, CreateHistoriqueResultDto } from 'src/historiques/dto/create-historique.dto';
 
 @Injectable()
 export class TransfertService {
@@ -23,7 +25,8 @@ export class TransfertService {
         private readonly userService: UserService,
         private readonly historiqueService: HistoriquesService,
         private readonly compteCollecteService: CompteCollecteService,
-        private readonly compteReservationService: CompteReservationService
+        private readonly compteReservationService: CompteReservationService,
+        private readonly configService: ConfigService
     ) { }
 
     async transferInitializer(payload: MakeTransfertDto) {
@@ -113,11 +116,30 @@ export class TransfertService {
             transfer.amountAfterSending = (balanceAfterSending).toString()
             transfer.senderPhoneNumber = senderPhoneNumber
             transfer.receiverPhoneNumber = receiverPhoneNumber
-    
             await this.repository.save(transfer)
+
+            let historique: CreateHistoriqueResultDto = null
+            if(transfer){
+                historique = await this.createHistorique({
+                    sender: getSenderInfos,
+                    receiver: getReceiverInfos,
+                    senderIdentifiant: getSenderInfos.id,
+                    receiverIdentifiant: getReceiverInfos.id,
+                    transactionType: TransactionType.TRANSFERT,
+                    referenceTransaction: transfer.reference,
+                    amount,
+                    fees: transfer.fees,
+                    status: "PENDING",
+                    icon: "send"
+                })
+                delete(historique.historique.sender)
+                delete(historique.historique.receiver)
+            }
+    
             return {
                 transfer,
                 amount,
+                historique: historique.historique,
                 fees: transfer.fees,
                 senderInfos: getSenderInfos,
                 status: TransactionResponse.SUCCESS,
@@ -129,92 +151,123 @@ export class TransfertService {
     async transferDebit(transfer: Transfert, amount: string, senderInfos: User, fees: string, receiverNumber: string) {
         const cost = parseInt(amount) + parseInt(fees)
         const balanceAfterSending = parseInt(senderInfos.solde) - cost;
+        if(balanceAfterSending < 0){
+            return {
+                transfer,
+                reservation: null,
+                amount,
+                receiverNumber,
+                senderInfos,
+                fees,
+                status: TransactionResponse.INSUFFICIENT_FUNDS
+            }
+        }
         await this.userService.updateUser(senderInfos.id, {
             solde: balanceAfterSending.toString()
         })
+
         const reservation = await this.compteReservationService.createCompteReservation({
             amount,
             fees,
+            fundsToSend: (parseInt(amount) + parseInt(fees)).toString(),
             transactionStatus: "IN PROGRESS",
             transactionType: TransactionType.TRANSFERT
         })
-        await this.compteCollecteService.createCompteCollect({
-            amount: fees,
-            collectType: CollectType.FRAIS
-        })
+        if(reservation){
+            const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_RESERVATION'))
+            const balanceAfterSending = parseInt(user.solde) + parseInt(amount) + parseInt(fees);
+            const credit = await this.userService.updateUser(user.id, {
+                solde: balanceAfterSending.toString()
+            })
 
-        return {
-            transfer,
-            reservation,
-            amount,
-            receiverNumber,
-            senderInfos,
-            fees,
-            status: TransactionResponse.SUCCESS
+            if(credit.affected === 1){
+                return {
+                    transfer,
+                    reservation,
+                    amount,
+                    receiverNumber,
+                    senderInfos,
+                    fees,
+                    status: TransactionResponse.SUCCESS
+                }
+            }else{
+                return {
+                    transfer,
+                    reservation,
+                    amount,
+                    receiverNumber,
+                    senderInfos,
+                    fees,
+                    status: TransactionResponse.INSUFFICIENT_FUNDS
+                }
+            }
         }
     }
 
-    async sendTransfer(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, transfer: Transfert, fees: string) {
+    async sendTransfer(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, transfer: Transfert, fees: string, historique: Historique) {
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
             solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString(),
         })
         if (updateReceiverBalance.affected === 1) {
-            await this.compteReservationService.updateCompteReservation(reservation.id, {
-                transactionStatus: "COMPLETED"
+            //debit reservation account
+            const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_RESERVATION'))
+            const balanceAfterSending = parseInt(user.solde) - parseInt(amount) - parseInt(fees);
+            const debit = await this.userService.updateUser(user.id, {
+                solde: balanceAfterSending.toString()
             })
-            await this.repository.update(transfer.id, {
-                status: TransferType.SUCCESS
-            })
-            await this.userService.updateUser(senderInfos.id, {
-                cumulMensuelRestant: getReceiverInfos.cumulMensuelRestant - parseInt(amount)
-            })
-            await this.historiqueService.createHistorique({
-                sender: senderInfos,
-                receiver: getReceiverInfos,
-                senderIdentifiant: senderInfos.id,
-                receiverIdentifiant: getReceiverInfos.id,
-                transactionType: TransactionType.TRANSFERT,
-                referenceTransaction: transfer.reference,
-                amount,
-                fees,
-                status: "SUCCESS",
-                icon: "send"
-            })
-            await this.historiqueService.createHistorique({
-                sender: senderInfos,
-                receiver: getReceiverInfos,
-                senderIdentifiant: senderInfos.id,
-                receiverIdentifiant: getReceiverInfos.id,
-                transactionType: TransactionType.TRANSFERT,
-                referenceTransaction: transfer.reference,
-                amount,
-                fees,
-                status: "SUCCESS",
-                icon: "arrow-down"
-            })
-            return {
-                status: TransactionResponse.SUCCESS
+            if(debit.affected === 1){
+                const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_COLLECTE'))
+                const balanceAfterSending = parseInt(user.solde) + parseInt(fees);
+                const credit = await this.userService.updateUser(user.id, {
+                    solde: balanceAfterSending.toString()
+                })
+                if(credit){
+                    await this.compteCollecteService.createCompteCollect({
+                        amount: fees,
+                        collectType: CollectType.FRAIS,
+                    })
+                    //update reservation status
+                    await this.compteReservationService.updateCompteReservation(reservation.id, {
+                        transactionStatus: "COMPLETED"
+                    })
+                    //update transfer status
+                    await this.repository.update(transfer.id,{
+                        status: TransferType.SUCCESS
+                    })
+                    //update historique status
+                    await this.historiqueService.updateHistorique(historique.id, {
+                        status: TransferType.SUCCESS
+                    })
+                }else{
+                    return{
+                        status: TransactionResponse.ERROR
+                    }
+                }
+
+                return {
+                    status: TransactionResponse.SUCCESS
+                }
+            } else{
+                await this.repository.update(transfer.id, {
+                    status: TransferType.FAILED
+                })
+                return {
+                    status: TransactionResponse.ERROR
+                }
             }
+            
         } else {
             await this.repository.update(transfer.id, {
                 status: TransferType.FAILED
             })
             await this.compteReservationService.updateCompteReservation(reservation.id, {
-                transactionStatus: "FAILED"
+                transactionStatus: TransferType.FAILED
             })
-            await this.historiqueService.createHistorique({
-                sender: senderInfos,
-                receiver: getReceiverInfos,
-                senderIdentifiant: senderInfos.id,
-                receiverIdentifiant: getReceiverInfos.id,
-                transactionType: TransactionType.TRANSFERT,
-                referenceTransaction: transfer.reference,
-                amount,
-                fees,
-                status: "FAILED",
-                icon: 'send'
+            await this.historiqueService.updateHistorique(historique.id, {
+                status: TransferType.FAILED
             })
+
             return {
                 status: TransactionResponse.ERROR
             }
@@ -265,5 +318,26 @@ export class TransfertService {
                 receiverPhoneNumber
             }
         })
+    }
+
+    /**
+     * Create a new historique using the provided data.
+     *
+     * @param {CreateHistoriqueDto} historique - The data for creating the historique.
+     * @return {Promise<CreateHistoriqueResultDto>} The result of the historique creation.
+     */
+    async createHistorique(historique: CreateHistoriqueDto): Promise<CreateHistoriqueResultDto> {
+        const history = await this.historiqueService.createHistorique(historique)
+        if (history) {
+            return {
+                historique: history,
+                status: TransactionResponse.SUCCESS
+            }
+        } else {
+            return {
+                historique: history,
+                status: TransactionResponse.ERROR
+            }
+        }
     }
 }

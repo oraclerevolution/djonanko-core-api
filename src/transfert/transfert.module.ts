@@ -7,6 +7,7 @@ import { Transfert } from './entities/transfert.entity';
 import { HistoriquesModule } from 'src/historiques/historiques.module';
 import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module';
 import { CompteReservationModule } from 'src/compte-reservation/compte-reservation.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { CompteReservationModule } from 'src/compte-reservation/compte-reservati
     UserModule,
     forwardRef(() => HistoriquesModule),
     CompteCollecteModule,
-    CompteReservationModule
+    CompteReservationModule,
+    ConfigModule
   ],
   controllers: [TransfertController],
   providers: [TransfertService],
