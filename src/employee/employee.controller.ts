@@ -8,6 +8,8 @@ import { GetUser } from 'src/user/decorators/get-user.decorator';
 import { GetMerchantEmployeesDto } from './dto/get-merchant-employees.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeeActivityDto } from './dto/employeeActivity.dto';
+import { DailyTransactionsReturnDto } from './dto/daily-transactions-return.dto';
+import { GetEmployeeTotalAmountReturnDto } from './dto/get-employee-total-amount-return.dto';
 
 @UseGuards(FullAuthGuard)
 @Controller('employee')
@@ -39,6 +41,18 @@ export class EmployeeController {
     @Get('employee-activity')
     async getAnEmployeeActivity(@Query('employeeId') id: string): Promise<EmployeeActivityDto> {
         return await this.employeeService.getAnEmployeeActivity(id);
+    }
+
+    @Get('get-all-employees-activity')
+    async getEmployeesActivity(
+        @Query('merchantId') merchantId: number
+    ): Promise<GetEmployeeTotalAmountReturnDto> {
+        return await this.employeeService.getAllEmployeesActivity(merchantId);
+    }
+
+    @Get('calculate-daily-transactions')
+    async calculateDailyTransactions(@Query('employeeId') employeeId: string): Promise<DailyTransactionsReturnDto[]> {
+        return await this.employeeService.calculateDailyTransactions(employeeId);
     }
 
     @Get('merchant-employee')

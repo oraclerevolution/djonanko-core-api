@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { Employee } from './entities/employee.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +11,9 @@ import { PaiementService } from 'src/paiement/paiement.service';
 import { TransfertService } from 'src/transfert/transfert.service';
 import { EmployeeActivityDto } from './dto/employeeActivity.dto';
 import { UserType } from 'src/user/enums/user-type.enum';
+import { Paiement } from 'src/paiement/entities/paiement.entity';
+import { DailyTransactionsReturnDto } from './dto/daily-transactions-return.dto';
+import { GetEmployeeTotalAmountReturnDto } from './dto/get-employee-total-amount-return.dto';
 
 @Injectable()
 export class EmployeeService {
@@ -19,12 +22,12 @@ export class EmployeeService {
         private readonly userService: UserService,
         private readonly paiementService: PaiementService,
         private readonly transfertService: TransfertService
-    ) {}
+    ) { }
 
     async create(payload: CreateEmployeeDto, user: User): Promise<Employee> {
         const { phoneNumber, address } = payload;
         const getUser = await this.userService.getUserByPhoneNumber(phoneNumber);
-        if(!getUser) throw new BadRequestException("Ce numéro n'est pas valide");
+        if (!getUser) throw new BadRequestException("Ce numéro n'est pas valide");
         const employee = new Employee();
         employee.fullname = getUser.fullname
         employee.phoneNumber = phoneNumber
@@ -34,7 +37,7 @@ export class EmployeeService {
 
         const createdEmployee = await this.repository.save(employee);
 
-        if(createdEmployee){
+        if (createdEmployee) {
             await this.userService.updateUser(getUser.id, {
                 userType: UserType.COMMERCANT
             })
@@ -43,7 +46,7 @@ export class EmployeeService {
         return createdEmployee
     }
 
-    async getEmployees (
+    async getEmployees(
         merchantId: string,
     ): Promise<GetMerchantEmployeesDto> {
         const [commercants, count] = await this.repository.findAndCount({
@@ -64,7 +67,7 @@ export class EmployeeService {
         const employeeTransferts = await this.transfertService.getTransferByReceiverNumber(employee.phoneNumber);
         const paymentTotal = employeePaiements.reduce((total, paiement) => total + parseInt(paiement.amount), 0);
         const transfertTotal = employeeTransferts.reduce((total, transfert) => total + parseInt(transfert.amount), 0);
-        
+
         return {
             paiements: employeePaiements,
             transferts: employeeTransferts,
@@ -73,10 +76,77 @@ export class EmployeeService {
         };
     }
 
-    async getMerchantEmployee(merchantId: number): Promise<Employee[]>{
+
+    async getAllEmployeesActivity(merchantId: number): Promise<GetEmployeeTotalAmountReturnDto> {
+        const employees = await this.repository.find({
+            where: {
+                userid: merchantId
+            }
+        });
+
+        if (!employees || employees.length === 0) {
+            throw new NotFoundException('Ce marchand n\'a pas d\'employés');
+        }
+
+        let totalAmount = 0;
+
+        for (const employee of employees) {
+            const user = await this.userService.getUserByPhoneNumber(employee.phoneNumber);
+
+            if (!user) {
+                throw new NotFoundException(`User not found for employee with ID ${employee.id}`);
+            }
+
+            const payments = await this.paiementService.getPaiementByReceiverNumber(user.numero);
+            const transfers = await this.transfertService.getTransferByReceiverNumber(user.numero);
+
+            for (const payment of payments) {
+                totalAmount += parseInt(payment.amount);
+            }
+
+            for (const transfer of transfers) {
+                totalAmount += parseInt(transfer.amount);
+            }
+        }
+
+        return {
+            merchantId,
+            totalAmount
+        }
+    }
+
+    async calculateDailyTransactions(employeeId: string): Promise<DailyTransactionsReturnDto[]> {
+        const operations = await this.getAnEmployeeActivity(employeeId);
+        const transactions = operations.paiements.concat(operations.transferts);
+        const dailyTransactionsMap = new Map<string, number>(); // Utilisation d'une map pour stocker les totaux par jour
+
+        for (const transaction of transactions) {
+            const transactionDate = new Date(transaction.createdAt).toDateString(); // Obtention de la date de la transaction (sans l'heure)
+            const transactionAmount = parseFloat(transaction.amount); // Conversion du montant en nombre
+
+            if (dailyTransactionsMap.has(transactionDate)) {
+                // Si la date existe déjà dans la map, ajoute le montant à son total
+                const currentTotal = dailyTransactionsMap.get(transactionDate) || 0;
+                dailyTransactionsMap.set(transactionDate, currentTotal + transactionAmount);
+            } else {
+                // Si la date n'existe pas encore dans la map, initialise le total à ce montant
+                dailyTransactionsMap.set(transactionDate, transactionAmount);
+            }
+        }
+
+        // Conversion de la map en un tableau d'objets DailyTransactionsDto
+        const dailyTransactionsList: DailyTransactionsReturnDto[] = [];
+        for (const [date, amount] of dailyTransactionsMap.entries()) {
+            dailyTransactionsList.push({ date: new Date(date), amount });
+        }
+
+        return dailyTransactionsList;
+    }
+
+    async getMerchantEmployee(merchantId: number): Promise<Employee[]> {
         //ici le merchantId n'est pas celui de la table marchands mais de la table user
         const employees = await this.repository.find({
-            where:{
+            where: {
                 userid: merchantId
             }
         })
@@ -88,7 +158,7 @@ export class EmployeeService {
         await this.repository.update(id, payload);
         return await this.repository.findOne(id);
     }
-    
+
     async delete(id: string): Promise<void> {
         await this.repository.delete(id);
     }
