@@ -10,6 +10,7 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { PaiementService } from 'src/paiement/paiement.service';
 import { TransfertService } from 'src/transfert/transfert.service';
 import { EmployeeActivityDto } from './dto/employeeActivity.dto';
+import { UserType } from 'src/user/enums/user-type.enum';
 
 @Injectable()
 export class EmployeeService {
@@ -31,7 +32,15 @@ export class EmployeeService {
         employee.email = getUser.email
         employee.address = address
 
-        return await this.repository.save(employee);
+        const createdEmployee = await this.repository.save(employee);
+
+        if(createdEmployee){
+            await this.userService.updateUser(getUser.id, {
+                userType: UserType.COMMERCANT
+            })
+        }
+
+        return createdEmployee
     }
 
     async getEmployees (
@@ -53,10 +62,26 @@ export class EmployeeService {
         const employee = await this.repository.findOne(id);
         const employeePaiements = await this.paiementService.getPaiementByReceiverNumber(employee.phoneNumber);
         const employeeTransferts = await this.transfertService.getTransferByReceiverNumber(employee.phoneNumber);
+        const paymentTotal = employeePaiements.reduce((total, paiement) => total + parseInt(paiement.amount), 0);
+        const transfertTotal = employeeTransferts.reduce((total, transfert) => total + parseInt(transfert.amount), 0);
+        
         return {
             paiements: employeePaiements,
-            transferts: employeeTransferts
+            transferts: employeeTransferts,
+            totalPaiement: paymentTotal,
+            totalTransfert: transfertTotal
         };
+    }
+
+    async getMerchantEmployee(merchantId: number): Promise<Employee[]>{
+        //ici le merchantId n'est pas celui de la table marchands mais de la table user
+        const employees = await this.repository.find({
+            where:{
+                userid: merchantId
+            }
+        })
+
+        return employees
     }
 
     async update(id: string, payload: UpdateEmployeeDto): Promise<Employee> {

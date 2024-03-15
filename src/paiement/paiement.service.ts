@@ -1,4 +1,4 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paiement } from './entities/paiement.entity';
 import { Repository, UpdateResult } from 'typeorm';
@@ -543,11 +543,17 @@ export class PaiementService {
     }
 
     async getPaiementByReceiverNumber(receiverPhoneNumber: string): Promise<Paiement[]> {
-        return await this.repository.find({
-            where: {
-                receiverPhoneNumber
-            }
-        })
+        //confirm employee type (isMerchant)
+        const employee = await this.userService.getCommercant(receiverPhoneNumber)
+        if(employee){
+            return await this.repository.find({
+                where: {
+                    receiverPhoneNumber,
+                }
+            })
+        }else{
+            throw new NotFoundException("L'utilisateur n'existe pas")
+        }
     }
 
 

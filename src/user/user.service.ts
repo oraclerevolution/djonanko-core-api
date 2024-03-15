@@ -16,6 +16,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateMobileMoneyDto } from './dto/update-mobile-money.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { FavoriteOperator } from './interfaces/favorite-operator.interface';
+import { UserType } from './enums/user-type.enum';
 
 @Injectable()
 export class UserService {
@@ -265,5 +266,16 @@ export class UserService {
         if(mobileMoney === "Moov"){
             return user.moovMoney
         }
+    }
+
+    async getCommercant(phoneNumber: string): Promise<User>{
+        const commercant = await this.repository.findOne({
+            where:{
+                numero: phoneNumber,
+                userType: UserType.COMMERCANT
+            }
+        })
+
+        return commercant
     }
 }

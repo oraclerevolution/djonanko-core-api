@@ -37,12 +37,19 @@ export class EmployeeController {
     }
 
     @Get('employee-activity')
-    async getAnEmployeeActivity(@Query('id') id: string): Promise<EmployeeActivityDto> {
+    async getAnEmployeeActivity(@Query('employeeId') id: string): Promise<EmployeeActivityDto> {
         return await this.employeeService.getAnEmployeeActivity(id);
     }
 
+    @Get('merchant-employee')
+    async merchantEmployees(
+        @Query('merchantId') merchantId: number
+    ): Promise<Employee[]>{
+        return await this.employeeService.getMerchantEmployee(merchantId)
+    }
+
     @Patch('update')
-    async updateCategorieMarchands(
+    async updateMarchands(
         @Query('id') id: string,
         @Body() payload: UpdateEmployeeDto
     ): Promise<Employee> {
@@ -50,7 +57,7 @@ export class EmployeeController {
     }
 
     @Delete('delete')
-    async deleteCategorieMarchands(@Query('id') id: string): Promise<void> {
+    async deleteMarchands(@Query('id') id: string): Promise<void> {
         await this.employeeService.delete(id);
     }
 }

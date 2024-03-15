@@ -3,5 +3,7 @@ import { Transfert } from "src/transfert/entities/transfert.entity";
 
 export interface EmployeeActivityDto {
     paiements: Paiement[],
-    transferts: Transfert[]
+    transferts: Transfert[],
+    totalPaiement: number,
+    totalTransfert: number
 }
