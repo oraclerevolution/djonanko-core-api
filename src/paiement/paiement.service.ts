@@ -124,7 +124,7 @@ export class PaiementService {
         const balanceAfterSending = parseInt(senderInfos.solde) - cost;
         if(balanceAfterSending < 0){
             return {
-                paiement,
+                    paiement,
                     reservation:null,
                     amount,
                     receiverNumber,
@@ -150,7 +150,7 @@ export class PaiementService {
             const credit = await this.userService.updateUser(user.id, {
             solde: balanceAfterSending.toString(),
         })
-            if (credit) {
+            if (credit.affected === 1) {
                 return {
                     paiement,
                     reservation,
@@ -197,7 +197,7 @@ export class PaiementService {
             const debit = await this.userService.updateUser(user.id, {
             solde: balanceAfterSending.toString(),
         })
-            if (debit) {
+            if (debit.affected === 1) {
                 const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_COLLECTE'))
                 const balanceAfterSending = parseInt(user.solde) + parseInt(fees);
                 const credit = await this.userService.updateUser(user.id, {
@@ -220,7 +220,7 @@ export class PaiementService {
 
                     //update historique status
                     await this.historiqueService.updateHistorique(historique.id, {
-                        status: "SUCCESS"
+                        status: PaiementType.SUCCESS
                     })
 
                     if (abonnement && abonnement === true) {
