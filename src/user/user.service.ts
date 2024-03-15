@@ -74,15 +74,19 @@ export class UserService {
             const token = this.jwtService.sign(payload)
             delete user.salt
             const otp = this.generateVerificationCode()
-            const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`
-            const phoneNumber = user.numero
-            await this.sendSMSToUser({ phoneNumber, message })
-            console.log("otp", otp);
-            this.updateUser(user.id,{ alreadyLogged: true })
-            return {
-                access_token: token,
-                user,
-                otp
+            if(otp){
+                const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`
+                const phoneNumber = user.numero
+                await this.sendSMSToUser({ phoneNumber, message })
+                console.log("otp", otp);
+                this.updateUser(user.id,{ alreadyLogged: true })
+                return {
+                    access_token: token,
+                    user,
+                    otp
+                }
+            }else{
+                throw new BadRequestException('Please retry login process')
             }
         } else {
             throw new UnauthorizedException("Connexion impossible, vérifiez vos identifiants")
