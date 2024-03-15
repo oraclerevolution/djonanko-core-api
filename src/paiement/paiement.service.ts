@@ -543,17 +543,11 @@ export class PaiementService {
     }
 
     async getPaiementByReceiverNumber(receiverPhoneNumber: string): Promise<Paiement[]> {
-        //confirm employee type (isMerchant)
-        const employee = await this.userService.getCommercant(receiverPhoneNumber)
-        if(employee){
-            return await this.repository.find({
-                where: {
-                    receiverPhoneNumber,
-                }
-            })
-        }else{
-            throw new NotFoundException("L'utilisateur n'existe pas")
-        }
+        return await this.repository.find({
+            where: {
+                receiverPhoneNumber,
+            }
+        })
     }
 
 
