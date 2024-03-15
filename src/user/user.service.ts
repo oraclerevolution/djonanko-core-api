@@ -74,7 +74,7 @@ export class UserService {
             const token = this.jwtService.sign(payload)
             delete user.salt
             const otp = this.generateVerificationCode()
-            if(otp){
+            if(otp !== 400){
                 const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`
                 const phoneNumber = user.numero
                 await this.sendSMSToUser({ phoneNumber, message })
@@ -102,7 +102,7 @@ export class UserService {
         if(String(optCode).length === 4){
             return optCode
         }else{
-            throw Error('Please retry login process')
+            return 400
         }
     }
 

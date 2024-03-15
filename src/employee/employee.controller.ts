@@ -51,8 +51,8 @@ export class EmployeeController {
     }
 
     @Get('calculate-daily-transactions')
-    async calculateDailyTransactions(@Query('employeeId') employeeId: string): Promise<DailyTransactionsReturnDto[]> {
-        return await this.employeeService.calculateDailyTransactions(employeeId);
+    async calculateDailyTransactions(@Query('merchantId') merchantId: number): Promise<DailyTransactionsReturnDto[]> {
+        return await this.employeeService.calculateDailyTransactions(merchantId);
     }
 
     @Get('merchant-employee')

@@ -14,6 +14,7 @@ import { UserType } from 'src/user/enums/user-type.enum';
 import { Paiement } from 'src/paiement/entities/paiement.entity';
 import { DailyTransactionsReturnDto } from './dto/daily-transactions-return.dto';
 import { GetEmployeeTotalAmountReturnDto } from './dto/get-employee-total-amount-return.dto';
+import { Transfert } from 'src/transfert/entities/transfert.entity';
 
 @Injectable()
 export class EmployeeService {
@@ -89,6 +90,7 @@ export class EmployeeService {
         }
 
         let totalAmount = 0;
+        let totalTransaction = 0;
 
         for (const employee of employees) {
             const user = await this.userService.getUserByPhoneNumber(employee.phoneNumber);
@@ -98,7 +100,9 @@ export class EmployeeService {
             }
 
             const payments = await this.paiementService.getPaiementByReceiverNumber(user.numero);
+            totalTransaction += payments.length;
             const transfers = await this.transfertService.getTransferByReceiverNumber(user.numero);
+            totalTransaction += transfers.length;
 
             for (const payment of payments) {
                 totalAmount += parseInt(payment.amount);
@@ -107,17 +111,35 @@ export class EmployeeService {
             for (const transfer of transfers) {
                 totalAmount += parseInt(transfer.amount);
             }
+
         }
 
         return {
             merchantId,
-            totalAmount
+            totalAmount,
+            totalTransaction
         }
     }
 
-    async calculateDailyTransactions(employeeId: string): Promise<DailyTransactionsReturnDto[]> {
-        const operations = await this.getAnEmployeeActivity(employeeId);
-        const transactions = operations.paiements.concat(operations.transferts);
+    async calculateDailyTransactions(merchantId: number): Promise<DailyTransactionsReturnDto[]> {
+        // const operations = await this.getAnEmployeeActivity(employeeId);
+        //je recupère tous les employés du marchands
+        const employees = await this.repository.find({
+            where: {
+                userid: merchantId
+            }
+        });
+
+        let allPayment: Paiement[] = [];
+        let allTransfert: Transfert[] = [];
+        for (const employee of employees) {
+            const paiements = await this.paiementService.getPaiementByReceiverNumber(employee.phoneNumber);
+            const transferts = await this.transfertService.getTransferByReceiverNumber(employee.phoneNumber);
+            if(paiements.length > 0) allPayment.push(...paiements);
+            if(transferts.length > 0) allTransfert.push(...transferts);
+        }
+
+        const transactions = allPayment.concat(allTransfert);
         const dailyTransactionsMap = new Map<string, number>(); // Utilisation d'une map pour stocker les totaux par jour
 
         for (const transaction of transactions) {
