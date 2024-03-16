@@ -100,9 +100,13 @@ export class EmployeeService {
             }
 
             const payments = await this.paiementService.getPaiementByReceiverNumber(user.numero);
-            totalTransaction += payments.length;
+            for (const payment of payments) {
+                if(payment.status === "SUCCESS") totalTransaction += 1;
+            }
             const transfers = await this.transfertService.getTransferByReceiverNumber(user.numero);
-            totalTransaction += transfers.length;
+            for (const transfer of transfers) {
+                if(transfer.status === "SUCCESS") totalTransaction += 1;
+            }
 
             for (const payment of payments) {
                 totalAmount += parseInt(payment.amount);
