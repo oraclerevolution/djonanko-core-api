@@ -18,6 +18,7 @@ import { TransfertModule } from 'src/transfert/transfert.module';
     TransfertModule
   ],
   controllers: [EmployeeController],
-  providers: [EmployeeService, FullAuthGuard]
+  providers: [EmployeeService, FullAuthGuard],
+  exports: [EmployeeService]
 })
 export class EmployeeModule {}
