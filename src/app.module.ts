@@ -19,6 +19,7 @@ import { CompteReservationModule } from './compte-reservation/compte-reservation
 import { AuthLogModule } from './auth-log/auth-log.module';
 import { PosModule } from './pos/pos.module';
 import { EmployeeModule } from './employee/employee.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -44,7 +45,7 @@ import { EmployeeModule } from './employee/employee.module';
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule, TransactionsModule
   ],
   controllers: [AppController],
   providers: [AppService],
