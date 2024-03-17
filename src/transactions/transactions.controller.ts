@@ -24,4 +24,11 @@ export class TransactionsController {
     ): Promise<any> {
         return await this.transactionsService.getNewClients(merchantId)
     }
+
+    @Get('user-transactions')
+    async getUserTransactions(
+        @Query('userNumber') userNumber: string
+    ){
+        return await this.transactionsService.getUserTransactions(userNumber)
+    }
 }

@@ -75,4 +75,13 @@ export class TransactionsService {
         //     clients: 
         // }
     }
+
+    async getUserTransactions(userNumber: string): Promise<Transactions[]>{
+        return await this.repository.find({
+            where: {
+                receiverPhoneNumber: userNumber,
+                senderPhoneNumber: userNumber
+            }
+        })
+    }
 }
