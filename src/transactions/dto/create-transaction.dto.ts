@@ -1,3 +1,3 @@
 import { Transactions } from "../entities/transactions.entity";
 
-export type CreateTransactionDto = Transactions
+export type CreateTransactionDto = Partial<Transactions>

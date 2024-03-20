@@ -8,6 +8,7 @@ import { UserModule } from 'src/user/user.module';
 import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module';
 import { CompteReservationModule } from 'src/compte-reservation/compte-reservation.module';
 import { ConfigModule } from '@nestjs/config';
+import { TransactionsModule } from 'src/transactions/transactions.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule,
     CompteCollecteModule,
     CompteReservationModule,
+    TransactionsModule
   ],
   controllers: [PaiementController],
   providers: [PaiementService],

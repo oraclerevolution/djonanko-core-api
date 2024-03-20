@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { EmployeeController } from './employee.controller';
 import { EmployeeService } from './employee.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -14,8 +14,8 @@ import { TransfertModule } from 'src/transfert/transfert.module';
       Employee
     ]), 
     UserModule,
-    PaiementModule,
-    TransfertModule
+    forwardRef(() => PaiementModule),
+    forwardRef(() => TransfertModule)
   ],
   controllers: [EmployeeController],
   providers: [EmployeeService, FullAuthGuard],
