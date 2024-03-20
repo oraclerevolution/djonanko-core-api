@@ -28,7 +28,7 @@ export class EmployeeController {
 
     @Get('get-merchant-employees')
     async getEmployees(
-        @Query("merchantId") merchantId: string,
+        @Query("merchantId") merchantId: number,
     ): Promise<GetMerchantEmployeesDto> {
         return await this.employeeService.getEmployees(merchantId);
     }

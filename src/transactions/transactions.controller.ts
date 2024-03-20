@@ -20,7 +20,7 @@ export class TransactionsController {
 
     @Get('merchant-new-clients')
     async getNewClients(
-        @Query('merchantId') merchantId: string
+        @Query('merchantId') merchantId: number
     ): Promise<any> {
         return await this.transactionsService.getNewClients(merchantId)
     }

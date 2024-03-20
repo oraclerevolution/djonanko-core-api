@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { Employee } from './entities/employee.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,8 +21,8 @@ export class EmployeeService {
     constructor(
         @InjectRepository(Employee) private readonly repository: Repository<Employee>,
         private readonly userService: UserService,
-        private readonly paiementService: PaiementService,
-        private readonly transfertService: TransfertService
+        @Inject(forwardRef(() => PaiementService)) private readonly paiementService: PaiementService,
+        @Inject(forwardRef(() => TransfertService)) private readonly transfertService: TransfertService
     ) { }
 
     async create(payload: CreateEmployeeDto, user: User): Promise<Employee> {
@@ -48,7 +48,7 @@ export class EmployeeService {
     }
 
     async getEmployees(
-        merchantId: string,
+        merchantId: number,
     ): Promise<GetMerchantEmployeesDto> {
         const [commercants, count] = await this.repository.findAndCount({
             where: {

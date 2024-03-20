@@ -17,6 +17,8 @@ import { Historique } from 'src/historiques/entities/historique.entity';
 import { HistoriqueFilterDto } from 'src/historiques/dto/historique-filter.dto';
 import { ConfigService } from '@nestjs/config';
 import { CreateHistoriqueDto, CreateHistoriqueResultDto } from 'src/historiques/dto/create-historique.dto';
+import { TransactionsService } from 'src/transactions/transactions.service';
+import { Transactions } from 'src/transactions/entities/transactions.entity';
 
 @Injectable()
 export class TransfertService {
@@ -26,7 +28,8 @@ export class TransfertService {
         private readonly historiqueService: HistoriquesService,
         private readonly compteCollecteService: CompteCollecteService,
         private readonly compteReservationService: CompteReservationService,
-        private readonly configService: ConfigService
+        private readonly configService: ConfigService,
+        private readonly transactionService: TransactionsService
     ) { }
 
     async transferInitializer(payload: MakeTransfertDto) {
@@ -47,6 +50,19 @@ export class TransfertService {
             transfer.amountAfterSending = (balanceAfterSending).toString()
             transfer.senderPhoneNumber = senderPhoneNumber
             transfer.receiverPhoneNumber = receiverPhoneNumber
+            transfer.status = TransferType.FAILED
+
+            const transaction = await this.transactionService.createTransaction({
+                amount,
+                amountBeforeSending: getSenderInfos.solde,
+                amountAfterSending: balanceAfterSending.toString(),
+                senderPhoneNumber: getSenderInfos.numero,
+                reference: transfer.reference,
+                receiverPhoneNumber: getReceiverInfos.numero,
+                fees: transfer.fees,
+                status: "FAILED",
+                type: TransactionType.TRANSFERT
+            })
 
             await this.historiqueService.createHistorique({
                 sender: getSenderInfos,
@@ -62,6 +78,7 @@ export class TransfertService {
             })
             return {
                 transfer,
+                transaction,
                 amount,
                 fees: transfer.fees,
                 senderInfos: getSenderInfos,
@@ -82,6 +99,18 @@ export class TransfertService {
             transfer.senderPhoneNumber = senderPhoneNumber
             transfer.receiverPhoneNumber = receiverPhoneNumber
 
+            const transaction = await this.transactionService.createTransaction({
+                amount,
+                amountBeforeSending: getSenderInfos.solde,
+                amountAfterSending: balanceAfterSending.toString(),
+                senderPhoneNumber: getSenderInfos.numero,
+                reference: transfer.reference,
+                receiverPhoneNumber: getReceiverInfos.numero,
+                fees: transfer.fees,
+                status: "FAILED",
+                type: TransactionType.TRANSFERT
+            })
+
             await this.historiqueService.createHistorique({
                 sender: getSenderInfos,
                 receiver: getReceiverInfos,
@@ -97,6 +126,7 @@ export class TransfertService {
 
             return {
                 transfer,
+                transaction,
                 amount,
                 fees: transfer.fees,
                 senderInfos: getSenderInfos,
@@ -119,7 +149,19 @@ export class TransfertService {
             await this.repository.save(transfer)
 
             let historique: CreateHistoriqueResultDto = null
+            let transaction: Transactions = null
             if(transfer){
+                transaction = await this.transactionService.createTransaction({
+                    amount: amount,
+                    amountBeforeSending: transfer.amountBeforeSending,
+                    amountAfterSending: transfer.amountAfterSending,
+                    senderPhoneNumber: transfer.senderPhoneNumber,
+                    reference: transfer.reference,
+                    receiverPhoneNumber: transfer.receiverPhoneNumber,
+                    fees: transfer.fees,
+                    status: "PENDING",
+                    type: TransactionType.TRANSFERT,
+                })
                 historique = await this.createHistorique({
                     sender: getSenderInfos,
                     receiver: getReceiverInfos,
@@ -140,6 +182,7 @@ export class TransfertService {
                 transfer,
                 amount,
                 historique: historique.historique,
+                transaction,
                 fees: transfer.fees,
                 senderInfos: getSenderInfos,
                 status: TransactionResponse.SUCCESS,
@@ -148,12 +191,17 @@ export class TransfertService {
         }
     }
 
-    async transferDebit(transfer: Transfert, amount: string, senderInfos: User, fees: string, receiverNumber: string) {
+    async transferDebit(transfer: Transfert, transaction: Transactions, historique: Historique, amount: string, senderInfos: User, fees: string, receiverNumber: string) {
         const cost = parseInt(amount) + parseInt(fees)
         const balanceAfterSending = parseInt(senderInfos.solde) - cost;
         if(balanceAfterSending < 0){
+            await this.repository.update(transfer.id, {
+                status: "FAILED"
+            })
+            await this.transactionService.updateTransactionStatusToFailed(transaction)
             return {
                 transfer,
+                transaction,
                 reservation: null,
                 amount,
                 receiverNumber,
@@ -183,6 +231,7 @@ export class TransfertService {
             if(credit.affected === 1){
                 return {
                     transfer,
+                    transaction,
                     reservation,
                     amount,
                     receiverNumber,
@@ -191,6 +240,13 @@ export class TransfertService {
                     status: TransactionResponse.SUCCESS
                 }
             }else{
+                await this.repository.update(transfer.id, {
+                    status: "FAILED"
+                })
+                await this.historiqueService.updateHistorique(historique.id, {
+                    status: "FAILED"
+                })
+                await this.transactionService.updateTransactionStatusToFailed(transaction)
                 return {
                     transfer,
                     reservation,
@@ -204,7 +260,7 @@ export class TransfertService {
         }
     }
 
-    async sendTransfer(senderInfos: User, reservation: CompteReservation, receiverNumber: string, amount: string, transfer: Transfert, fees: string, historique: Historique) {
+    async sendTransfer(reservation: CompteReservation, receiverNumber: string, amount: string, transfer: Transfert, transaction: Transactions, fees: string, historique: Historique) {
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverNumber);
         const updateReceiverBalance = await this.userService.updateUser(getReceiverInfos.id, {
             solde: (parseInt(getReceiverInfos.solde) + parseInt(amount)).toString(),
@@ -235,6 +291,8 @@ export class TransfertService {
                     await this.repository.update(transfer.id,{
                         status: TransferType.SUCCESS
                     })
+                    //update transaction status
+                    await this.transactionService.updateTransactionStatusToSuccess(transaction)
                     //update historique status
                     await this.historiqueService.updateHistorique(historique.id, {
                         status: TransferType.SUCCESS
@@ -252,6 +310,7 @@ export class TransfertService {
                 await this.repository.update(transfer.id, {
                     status: TransferType.FAILED
                 })
+                await this.transactionService.updateTransactionStatusToFailed(transaction)
                 return {
                     status: TransactionResponse.ERROR
                 }
@@ -261,6 +320,7 @@ export class TransfertService {
             await this.repository.update(transfer.id, {
                 status: TransferType.FAILED
             })
+            await this.transactionService.updateTransactionStatusToFailed(transaction)
             await this.compteReservationService.updateCompteReservation(reservation.id, {
                 transactionStatus: TransferType.FAILED
             })

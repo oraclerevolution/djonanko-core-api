@@ -12,6 +12,7 @@ import { PaymentRequestDto } from './dto/payment-request.dto';
 import { ValidatePaymentDto } from './dto/validate-payment.dto';
 import { MakeAbonnementDto } from './dto/abonnement.dto';
 import { Historique } from 'src/historiques/entities/historique.entity';
+import { Transactions } from 'src/transactions/entities/transactions.entity';
 
 @UseGuards(FullAuthGuard)
 @Controller('paiement')
@@ -30,14 +31,16 @@ export class PaiementController {
     @Post('debitPayment')
     async debitPayment(
         @Body() payload: {
-            paiement: Paiement
+            paiement: Paiement,
+            transaction: Transactions,
+            historique: Historique,
             amount: string
             senderInfos: User
             fees: string
             receiverNumber: string
         }
     ): Promise<PaymentDebitDto> {
-        return await this.paiementService.paymentDebit(payload.paiement, payload.amount, payload.senderInfos, payload.fees, payload.receiverNumber)
+        return await this.paiementService.paymentDebit(payload.paiement, payload.transaction, payload.historique, payload.amount, payload.senderInfos, payload.fees, payload.receiverNumber)
     }
 
     @Post('execPayment')
@@ -47,13 +50,14 @@ export class PaiementController {
             reservation:CompteReservation, 
             receiverNumber: string, 
             amount: string, 
-            paiement: Paiement, 
+            paiement: Paiement,
+            transaction: Transactions, 
             fees: string,
             abonnement?:boolean,
             historique: Historique
         }
     ){
-        return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.fees, payload.historique )
+        return await this.paiementService.sendPayment(payload.senderInfos, payload.reservation, payload.receiverNumber, payload.amount, payload.paiement, payload.transaction, payload.fees, payload.historique )
     }
 
     @Get('paiementByReference')
