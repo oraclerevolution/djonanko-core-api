@@ -28,6 +28,10 @@ export class TransactionsService {
         return await this.repository.save(payload)
     }
 
+    async getTransactionByReference(reference: string): Promise<Transactions> {
+        return await this.repository.findOne({ where: { reference } });
+    }
+
     async getNewClients(merchantId: number): Promise<GetNewClientDto> {
         const employees = await this.employeeService.getEmployees(merchantId);
 
@@ -79,15 +83,7 @@ export class TransactionsService {
         return transactions
     }
 
-    async updateTransactionStatusToFailed(updateTransactionDto: Partial<Transactions>): Promise<UpdateResult> {
-        return await this.repository.update(updateTransactionDto.id, {
-            status: "FAILED"
-        })
-    }
-
-    async updateTransactionStatusToSuccess(updateTransactionDto: Partial<Transactions>): Promise<UpdateResult> {
-        return await this.repository.update(updateTransactionDto.id, {
-            status: "SUCCESS"
-        })
+    async updateTransaction(id: string, transaction: Partial<Transactions>): Promise<UpdateResult> {
+        return await this.repository.update(id, transaction)
     }
 }
