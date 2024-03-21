@@ -13,6 +13,7 @@ import { ValidatePaymentDto } from './dto/validate-payment.dto';
 import { MakeAbonnementDto } from './dto/abonnement.dto';
 import { Historique } from 'src/historiques/entities/historique.entity';
 import { Transactions } from 'src/transactions/entities/transactions.entity';
+import { GetUser } from 'src/user/decorators/get-user.decorator';
 
 @UseGuards(FullAuthGuard)
 @Controller('paiement')
@@ -76,9 +77,10 @@ export class PaiementController {
 
     @Post('validate-payment-request')
     async validatePaymentRequest(
-        @Body() payload: ValidatePaymentDto
+        @Body() payload: ValidatePaymentDto,
+        @GetUser() user: User,
     ){
-        return await this.paiementService.validatePaymentRequest(payload)
+        return await this.paiementService.validatePaymentRequest(payload, user)
     }
 
     @Get('all-pending-payment-for-a-merchant')
