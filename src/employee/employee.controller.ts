@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { Employee } from './entities/employee.entity';
@@ -10,12 +10,14 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeeActivityDto } from './dto/employeeActivity.dto';
 import { DailyTransactionsReturnDto } from './dto/daily-transactions-return.dto';
 import { GetEmployeeTotalAmountReturnDto } from './dto/get-employee-total-amount-return.dto';
+import { UserService } from 'src/user/user.service';
 
 @UseGuards(FullAuthGuard)
 @Controller('employee')
 export class EmployeeController {
     constructor(
-        private readonly employeeService: EmployeeService
+        private readonly employeeService: EmployeeService,
+        private readonly usersService: UserService
     ) {}
 
     @Post('create')
@@ -23,6 +25,8 @@ export class EmployeeController {
         @Body() payload: CreateEmployeeDto,
         @GetUser() user: User
     ): Promise<Employee> {
+        const getUser = await this.usersService.getUserByPhoneNumber(payload.phoneNumber);
+        if(!getUser) throw new BadRequestException("Ce numéro n'est pas valide");
         return await this.employeeService.create(payload, user);
     }
 
