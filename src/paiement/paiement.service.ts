@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paiement } from './entities/paiement.entity';
 import { Repository, UpdateResult } from 'typeorm';
@@ -94,8 +94,8 @@ export class PaiementService {
                 icon: 'send'
             })
             //supprimer les données non utilisable
-            delete(historique.historique.sender)
-            delete(historique.historique.receiver)
+            delete (historique.historique.sender)
+            delete (historique.historique.receiver)
 
             return {
                 payment: payment,
@@ -107,7 +107,7 @@ export class PaiementService {
                 status: TransactionResponse.SUCCESS,
                 receiverNumber: receiverPhoneNumber
             }
-            
+
         } else {
             await this.repository.update(payment.id, {
                 status: "FAILED"
@@ -139,15 +139,17 @@ export class PaiementService {
     async paymentDebit(paiement: Paiement, transaction: Transactions, historique: Historique, amount: string, senderInfos: User, fees: string, receiverNumber: string): Promise<PaymentDebitDto> {
         const cost = parseInt(amount) + parseInt(fees);
         const balanceAfterSending = parseInt(senderInfos.solde) - cost;
-        if(balanceAfterSending < 0){
+        if (balanceAfterSending < 0) {
             await this.repository.update(paiement.id, {
                 status: "FAILED"
             })
-            await this.transactionService.updateTransactionStatusToFailed(transaction)
+            await this.transactionService.updateTransaction(transaction.id, {
+                status: "FAILED"
+            })
             return {
                 paiement,
                 transaction,
-                reservation:null,
+                reservation: null,
                 amount,
                 receiverNumber,
                 senderInfos,
@@ -170,8 +172,8 @@ export class PaiementService {
             const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_RESERVATION'))
             const balanceAfterSending = parseInt(user.solde) + parseInt(amount) + parseInt(fees);
             const credit = await this.userService.updateUser(user.id, {
-            solde: balanceAfterSending.toString(),
-        })
+                solde: balanceAfterSending.toString(),
+            })
             if (credit.affected === 1) {
                 return {
                     paiement,
@@ -187,10 +189,12 @@ export class PaiementService {
                 await this.repository.update(paiement.id, {
                     status: "FAILED"
                 })
-                await this.historiqueService.updateHistorique(historique.id,{
+                await this.historiqueService.updateHistorique(historique.id, {
                     status: "FAILED"
                 })
-                await this.transactionService.updateTransactionStatusToFailed(transaction)
+                await this.transactionService.updateTransaction(transaction.id, {
+                    status: "FAILED"
+                })
                 return {
                     paiement,
                     transaction,
@@ -226,8 +230,8 @@ export class PaiementService {
             const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_RESERVATION'))
             const balanceAfterSending = parseInt(user.solde) - (parseInt(amount) + parseInt(fees));
             const debit = await this.userService.updateUser(user.id, {
-            solde: balanceAfterSending.toString(),
-        })
+                solde: balanceAfterSending.toString(),
+            })
             if (debit.affected === 1) {
                 const user = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_COLLECTE'))
                 const balanceAfterSending = parseInt(user.solde) + parseInt(fees);
@@ -250,7 +254,9 @@ export class PaiementService {
                     })
 
                     //update transaction status
-                    await this.transactionService.updateTransactionStatusToSuccess(transaction)
+                    await this.transactionService.updateTransaction(transaction.id, {
+                        status: "SUCCESS"
+                    })
 
                     //update historique status
                     await this.historiqueService.updateHistorique(historique.id, {
@@ -277,7 +283,9 @@ export class PaiementService {
                 await this.repository.update(paiement.id, {
                     status: PaiementType.FAILED
                 })
-                await this.transactionService.updateTransactionStatusToFailed(transaction)
+                await this.transactionService.updateTransaction(transaction.id, {
+                    status: "FAILED"
+                })
                 return {
                     status: TransactionResponse.ERROR
                 }
@@ -286,7 +294,9 @@ export class PaiementService {
             await this.repository.update(paiement.id, {
                 status: PaiementType.FAILED
             })
-            await this.transactionService.updateTransactionStatusToFailed(transaction)
+            await this.transactionService.updateTransaction(transaction.id,{
+                status: "FAILED"
+            })
             await this.compteReservationService.updateCompteReservation(reservation.id, {
                 transactionStatus: "FAILED"
             })
@@ -497,6 +507,17 @@ export class PaiementService {
         const result = await this.repository.save(paymentRequest)
 
         if (result) {
+            //create a transaction
+            await this.transactionService.createTransaction({
+                amount: amount,
+                amountBeforeSending: creditedUser.solde,
+                amountAfterSending: (parseInt(creditedUser.solde) + parseInt(amount)).toString(),
+                senderPhoneNumber: senderPhoneNumber,
+                reference: result.reference,
+                receiverPhoneNumber: receiverPhoneNumber,
+                fees: "0",
+                type: TransactionType.PAYMENT_REQUEST
+            })
             //if payment request is successful we create an history
             await this.historiqueService.createHistorique({
                 sender: debitedUser,
@@ -510,13 +531,19 @@ export class PaiementService {
                 status: "PENDING",
                 icon: 'send'
             })
+        } else {
+            throw new BadRequestException('Le paiement a échoué')
         }
 
         return result
     }
 
-    async validatePaymentRequest(payload: ValidatePaymentDto): Promise<PaymentExecDto> {
+    async validatePaymentRequest(payload: ValidatePaymentDto, authUser: User): Promise<PaymentExecDto> {
         const { reference } = payload
+        const transaction = await this.transactionService.getTransactionByReference(reference)
+        if(authUser.numero !== transaction.senderPhoneNumber){
+            throw new BadRequestException('Vous ne pouvez pas valider ce paiement')
+        }
         try {
             const paymentRequest = await this.repository.findOne({
                 where: {
@@ -526,36 +553,64 @@ export class PaiementService {
             const paymentRequestHistory = await this.historiqueService.getHistoriqueByReference(reference)
             const debitedUser = await this.userService.getUserByPhoneNumber(paymentRequest.senderPhoneNumber)
             const creditedUser = await this.userService.getUserByPhoneNumber(paymentRequest.receiverPhoneNumber)
-            //on débite la somme du paiement
-            const cost = paymentRequest.amount
+            //on débite la somme du paiement au client
+            const cost = (parseInt(paymentRequest.amount) + parseInt(paymentRequest.fees)).toString()
             const balanceAfterSending = parseInt(debitedUser.solde) - parseInt(cost);
             await this.userService.updateUser(debitedUser.id, {
                 solde: balanceAfterSending.toString()
             })
             //apres avoir debiter la somme on credite le compte de reservation
             const reservation = await this.compteReservationService.createCompteReservation({
-                amount: cost,
+                amount: paymentRequest.amount,
+                fundsToSend: cost,
                 fees: "0",
                 transactionStatus: "IN PROGRESS",
                 transactionType: TransactionType.PAYMENT_REQUEST
             })
+            if (reservation) {
+                const compteReservation = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_RESERVATION'))
+                if (compteReservation) {
+                    await this.userService.updateUser(compteReservation.id, {
+                        solde: (parseInt(compteReservation.solde) + parseInt(cost)).toString(),
+                    })
+                }
+            }
             //on credite le compte du beneficiaire
             const updateReceiverBalance = await this.userService.updateUser(creditedUser.id, {
-                solde: (parseInt(creditedUser.solde) + parseInt(cost)).toString(),
+                solde: (parseInt(creditedUser.solde) + parseInt(paymentRequest.amount)).toString(),
             })
             if (updateReceiverBalance.affected === 1) {
-                //on update le statut de paiement de la requête de paiement
-                await this.repository.update(paymentRequest.id, {
-                    status: PaiementType.PAYMENT_REQUEST_SUCCESS
+                //on debite le compte de reservation
+                const updateReservationBalance = await this.compteReservationService.updateCompteReservation(reservation.id, {
+                    amount: (parseInt(reservation.amount) - parseInt(cost)).toString(),
                 })
-                //on update le statut de la requête de paiement dans l'historique
-                await this.historiqueService.updateHistorique(paymentRequestHistory.id, {
-                    status: "SUCCESS"
-                })
-                //on update le statut de la reservation
-                await this.compteReservationService.updateCompteReservation(reservation.id, {
-                    transactionStatus: "COMPLETED",
-                })
+                if (updateReservationBalance.affected === 1) {
+                    const updateReservation = await this.compteReservationService.updateCompteReservation(reservation.id, {
+                        transactionStatus: "COMPLETED",
+                    })
+
+                    if (updateReservation.affected === 1) {
+                        //on update le statut de paiement de la requête de paiement
+                        await this.repository.update(paymentRequest.id, {
+                            status: PaiementType.PAYMENT_REQUEST_SUCCESS
+                        })
+                        //on update le statut de la transaction
+                        await this.transactionService.updateTransaction(transaction.id,{
+                            status: "SUCCESS",
+                        })
+                        //on update le statut de la requête de paiement dans l'historique
+                        await this.historiqueService.updateHistorique(paymentRequestHistory.id, {
+                            status: "SUCCESS"
+                        })
+                        //on credite le compte de collecte
+                        const compteCollecte = await this.userService.getUserByPhoneNumber(this.configService.get<string>('COMPTE_COLLECTE'))
+                        if (compteCollecte) {
+                            await this.userService.updateUser(compteCollecte.id, {
+                                solde: (parseInt(compteCollecte.solde) + parseInt(paymentRequest.fees)).toString(),
+                            })
+                        }
+                    }
+                }
             }
 
             return {
