@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Paiement } from './entities/paiement.entity';
 import { Repository, UpdateResult } from 'typeorm';
@@ -366,11 +366,21 @@ export class PaiementService {
                     const debitSender = await this.userService.updateUser(getSenderInfos.id, {
                         solde: (parseInt(getSenderInfos.solde) - parseInt(amount)).toString()
                     })
+                    if(parseInt(getSenderInfos.solde) - parseInt(amount) < 0 || parseInt(getSenderInfos.solde) < parseInt(amount)) {
+                        //update payment status
+                        await this.repository.update(payment.id, {status: PaiementType.FAILED})
+                        //update transaction status
+                        await this.transactionService.updateTransaction(transaction.id, {status: PaiementType.FAILED})
+                        //update historique status
+                        await this.historiqueService.updateHistorique(historique.historique.id, {status: PaiementType.FAILED})
+                        throw new HttpException('Fonds insuffisants', HttpStatus.BAD_REQUEST)
+                    }
                     if (debitSender.affected === 1) {
                         //create reservation
                         const reservation = await this.compteReservationService.createCompteReservation({
                             amount: amount,
                             fees: "0",
+                            fundsToSend: amount,
                             transactionStatus: "IN PROGRESS",
                             transactionType: TransactionType.ABONNEMENT
                         })
@@ -381,18 +391,14 @@ export class PaiementService {
                             })
                             if (credit.affected === 1) {
                                 //credit collect account
-                                const credit = await this.compteCollecteService.createCompteCollect({
+                                const creditCollectAccount = await this.compteCollecteService.createCompteCollect({
                                     amount: amount,
                                     collectType: CollectType.ABONNEMENT
                                 })
-                                if (credit) {
+                                if (creditCollectAccount) {
                                     //update collect account
                                     await this.userService.updateUser(compteCollect.id, {
                                         solde: (parseInt(compteCollect.solde) + parseInt(amount)).toString()
-                                    })
-                                    await this.compteCollecteService.createCompteCollect({
-                                        amount: amount,
-                                        collectType: CollectType.ABONNEMENT
                                     })
                                     const debitReservation = await this.userService.updateUser(creditCompteReservation.id, {
                                         solde: (parseInt(creditCompteReservation.solde) - parseInt(amount)).toString()
@@ -431,17 +437,8 @@ export class PaiementService {
                                         transactionStatus: "FAILED"
                                     })
                                     // create historique
-                                    await this.historiqueService.createHistorique({
-                                        sender: getSenderInfos,
-                                        receiver: getReceiverInfos,
-                                        senderIdentifiant: getSenderInfos.id,
-                                        receiverIdentifiant: getReceiverInfos.id,
-                                        referenceTransaction: this.generateReference(),
-                                        transactionType: TransactionType.ABONNEMENT,
-                                        amount: amount,
-                                        fees: '0',
+                                    await this.historiqueService.updateHistorique(historique.historique.id,{
                                         status: "FAILED",
-                                        icon: 'send'
                                     })
                                     return {
                                         status: TransactionResponse.ERROR
