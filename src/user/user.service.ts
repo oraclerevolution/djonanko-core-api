@@ -36,6 +36,7 @@ export class UserService {
         const user = this.repository.create({
             ...payload,
         })
+        user.referralCode = this.generateReferralCode()
         user.salt = await bcrypt.genSalt()
         user.password = await bcrypt.hash(user.password, user.salt)
 
@@ -104,6 +105,22 @@ export class UserService {
         }else{
             return 400
         }
+    }
+
+    /**
+     * Génération d'un code unique, par exemple en utilisant une combinaison de chiffres et de lettres
+     *
+     * @return {string} the generated referral code
+     */
+    private generateReferralCode(): string {
+        // Génération d'un code unique, par exemple en utilisant une combinaison de chiffres et de lettres
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const codeLength = 8;
+        let referralCode = '';
+        for (let i = 0; i < codeLength; i++) {
+          referralCode += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return referralCode;
     }
 
     async getUserByPhoneNumber(phoneNumber: string): Promise<User> {

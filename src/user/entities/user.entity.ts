@@ -78,6 +78,9 @@ export class User {
     @Column({nullable: true})
     referralCode: string
 
+    @Column({nullable: true, default: '0', name: 'referral_amount_to_point'})
+    referralAmountToPoint: string
+
     @CreateDateColumn()
     createdAt: Date
 

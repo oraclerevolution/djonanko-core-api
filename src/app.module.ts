@@ -20,6 +20,7 @@ import { AuthLogModule } from './auth-log/auth-log.module';
 import { PosModule } from './pos/pos.module';
 import { EmployeeModule } from './employee/employee.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { ReferralsModule } from './referrals/referrals.module';
 
 @Module({
   imports: [
@@ -45,7 +46,7 @@ import { TransactionsModule } from './transactions/transactions.module';
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule, TransactionsModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule, TransactionsModule, ReferralsModule
   ],
   controllers: [AppController],
   providers: [AppService],
