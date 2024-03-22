@@ -198,7 +198,9 @@ export class TransfertService {
             await this.repository.update(transfer.id, {
                 status: "FAILED"
             })
-            await this.transactionService.updateTransactionStatusToFailed(transaction)
+            await this.transactionService.updateTransaction(transaction.id, {
+                status: "FAILED"
+            })
             return {
                 transfer,
                 transaction,
@@ -246,7 +248,9 @@ export class TransfertService {
                 await this.historiqueService.updateHistorique(historique.id, {
                     status: "FAILED"
                 })
-                await this.transactionService.updateTransactionStatusToFailed(transaction)
+                await this.transactionService.updateTransaction(transaction.id, {
+                    status: "FAILED"
+                })
                 return {
                     transfer,
                     reservation,
@@ -292,7 +296,9 @@ export class TransfertService {
                         status: TransferType.SUCCESS
                     })
                     //update transaction status
-                    await this.transactionService.updateTransactionStatusToSuccess(transaction)
+                    await this.transactionService.updateTransaction(transaction.id, {
+                        status: "SUCCESS"
+                    })
                     //update historique status
                     await this.historiqueService.updateHistorique(historique.id, {
                         status: TransferType.SUCCESS
@@ -310,7 +316,9 @@ export class TransfertService {
                 await this.repository.update(transfer.id, {
                     status: TransferType.FAILED
                 })
-                await this.transactionService.updateTransactionStatusToFailed(transaction)
+                await this.transactionService.updateTransaction(transaction.id, {
+                    status: "FAILED"
+                })
                 return {
                     status: TransactionResponse.ERROR
                 }
@@ -320,7 +328,9 @@ export class TransfertService {
             await this.repository.update(transfer.id, {
                 status: TransferType.FAILED
             })
-            await this.transactionService.updateTransactionStatusToFailed(transaction)
+            await this.transactionService.updateTransaction(transaction.id, {
+                status: "FAILED"
+            })
             await this.compteReservationService.updateCompteReservation(reservation.id, {
                 transactionStatus: TransferType.FAILED
             })
