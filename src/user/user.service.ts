@@ -191,12 +191,9 @@ export class UserService {
         })
     }
 
-    async updateUserMobileMoney(id: number, payload: UpdateMobileMoneyDto) {
+    async updateUserMobileMoney(id: number, payload: UpdateUserDto) {
         const user = await this.repository.update(id, {
-            waveMoney: payload.waveMoney,
-            orangeMoney: payload.orangeMoney,
-            mtnMoney: payload.mtnMoney,
-            moovMoney: payload.moovMoney
+            ...payload
         })
 
         return user
