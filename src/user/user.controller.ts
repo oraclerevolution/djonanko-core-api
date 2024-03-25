@@ -7,6 +7,7 @@ import { UserAuth } from './enums/user-auth.enum';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FullAuthGuard } from 'src/full-auth-guard/full-auth-guard.guard';
 import { FavoriteOperator } from './interfaces/favorite-operator.interface';
+import { UpdateMobileMoneyDto } from './dto/update-mobile-money.dto';
 
 @Controller('user')
 export class UserController {
@@ -72,7 +73,7 @@ export class UserController {
     @Patch('update-user-mobile-money')
     async updateUserMobileMoney(
         @Query('id') id: number,
-        @Body() payload: UpdateUserDto
+        @Body() payload: UpdateMobileMoneyDto
     ){
         return await this.userService.updateUserMobileMoney(id, payload)
     }
