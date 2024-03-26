@@ -21,6 +21,7 @@ import { PosModule } from './pos/pos.module';
 import { EmployeeModule } from './employee/employee.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ReferralsModule } from './referrals/referrals.module';
+import { ForgetPasswordModule } from './forget-password/forget-password.module';
 
 @Module({
   imports: [
@@ -46,7 +47,7 @@ import { ReferralsModule } from './referrals/referrals.module';
       rootPath: join(__dirname, '..', 'uploads'),
     }),
     HelperModule, 
-    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule, TransactionsModule, ReferralsModule
+    UserModule, TransfertModule, HistoriquesModule, MarchandsModule, CategorieMarchandsModule, PaiementModule, CompteCollecteModule, CompteReservationModule, AuthLogModule, PosModule, EmployeeModule, TransactionsModule, ReferralsModule, ForgetPasswordModule
   ],
   controllers: [AppController],
   providers: [AppService],
