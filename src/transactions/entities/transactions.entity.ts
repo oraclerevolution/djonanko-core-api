@@ -1,6 +1,7 @@
 import { TransactionType } from "src/transfert/enums/transfer-type.enum";
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { TransactionType as TypeTransaction } from "src/historiques/enums/transaction-type.enum";
+import { TypeOperation } from "../enums/type-operation.enum";
 @Entity({
     name: 'transactions'
 })
@@ -25,6 +26,9 @@ export class Transactions {
 
     @Column({name: 'receiver_phone_number'})
     receiverPhoneNumber: string;
+
+    @Column({name: 'operation', type:"enum", enum:TypeOperation, nullable: true})
+    operation: string
 
     @Column({name: 'fees'})
     fees: string;
