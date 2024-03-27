@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ForgetPassword } from './entities/forget-password.entity';
-import { Between, FindConditions, LessThanOrEqual, MoreThanOrEqual, Repository, UpdateResult } from 'typeorm';
+import { Between, FindConditions, FindOperator, LessThanOrEqual, MoreThanOrEqual, Repository, UpdateResult } from 'typeorm';
 import { CreateForgetPasswordDto } from './dto/create-forget.password.dto';
 import { GetReclammationsDto } from './dto/get-reclammations.dto';
 import { UpdateReclamationStatusDto } from './dto/update-reclamation-status.dto';
 import { RateReclammationDto } from './dto/rate-reclammation.dto';
+import { isAfter, isBefore } from 'date-fns';
 
 @Injectable()
 export class ForgetPasswordService {
@@ -81,7 +82,14 @@ export class ForgetPasswordService {
         id: string,
         payload: UpdateReclamationStatusDto
     ): Promise<UpdateResult>{
-        return this.repository.update(id, payload);
+        const update = this.repository.update(id, payload);
+        if(update) {
+            this.repository.update(id,{
+                approvedAt: new Date()
+            })
+        }
+
+        return update
     }
 
     async rateReclamation(id: string, payload: RateReclammationDto): Promise<UpdateResult> {
