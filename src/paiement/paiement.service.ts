@@ -49,80 +49,95 @@ export class PaiementService {
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
 
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverPhoneNumber);
+        console.log('getReceiverInfos', getReceiverInfos);
         const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
 
-        //on initialise le paiement avec un statut PENDING
-        const payment = new Paiement()
-        payment.amount = amount;
-        if (getSenderInfos.premium === true) {
-            payment.fees = (0.005 * parseInt(amount)).toString();
-        } else {
-            payment.fees = (0.01 * parseInt(amount)).toString();
-        }
-        payment.amountBeforeSending = getSenderInfos.solde;
-        payment.reference = this.generateReference();
-        payment.amountAfterSending = (balanceAfterSending).toString();
-        payment.senderPhoneNumber = senderPhoneNumber;
-        payment.receiverPhoneNumber = receiverPhoneNumber
-        await this.repository.save(payment);
-
-        //on cree la transaction
-        // const newPayment = await this.createpaiement(payload, getSenderInfos);
-        let historique: CreateHistoriqueResultDto = null
-        if (payment) {
-            const transaction = await this.transactionService.createTransaction({
-                amount: amount,
-                amountBeforeSending: payment.amountBeforeSending,
-                amountAfterSending: payment.amountAfterSending,
-                senderPhoneNumber: payment.senderPhoneNumber,
-                reference: payment.reference,
-                receiverPhoneNumber: payment.receiverPhoneNumber,
-                fees: payment.fees,
-                status: "PENDING",
-                type: TransactionType.PAIEMENT,
-            })
-            historique = await this.createHistorique({
-                sender: getSenderInfos,
-                receiver: getReceiverInfos,
-                senderIdentifiant: getSenderInfos.id,
-                receiverIdentifiant: getReceiverInfos.id,
-                referenceTransaction: payment.reference,
-                transactionType: TransactionType.PAIEMENT,
-                amount: amount,
-                fees: payment.fees,
-                status: "PENDING",
-                icon: 'send'
-            })
-            //supprimer les données non utilisable
-            delete (historique.historique.sender)
-            delete (historique.historique.receiver)
-
+        if (getReceiverInfos === undefined) {
             return {
-                payment: payment,
+                payment: null,
                 amount: amount,
-                historique: historique.historique,
-                transaction: transaction,
-                fees: payment.fees,
-                senderInfos: getSenderInfos,
-                status: TransactionResponse.SUCCESS,
-                receiverNumber: receiverPhoneNumber
-            }
-
-        } else {
-            await this.repository.update(payment.id, {
-                status: "FAILED"
-            })
-            return {
-                payment: payment,
-                amount: amount,
-                historique: historique.historique,
+                historique: null,
                 transaction: null,
-                fees: payment.fees,
-                senderInfos: getSenderInfos,
-                status: TransactionResponse.ERROR,
+                fees: null,
+                senderInfos: null,
+                status: TransactionResponse.NOT_FOUND,
                 receiverNumber: receiverPhoneNumber
             }
+        } else {
+            //on initialise le paiement avec un statut PENDING
+            const payment = new Paiement()
+            payment.amount = amount;
+            if (getSenderInfos.premium === true) {
+                payment.fees = (0.005 * parseInt(amount)).toString();
+            } else {
+                payment.fees = (0.01 * parseInt(amount)).toString();
+            }
+            payment.amountBeforeSending = getSenderInfos.solde;
+            payment.reference = this.generateReference();
+            payment.amountAfterSending = (balanceAfterSending).toString();
+            payment.senderPhoneNumber = senderPhoneNumber;
+            payment.receiverPhoneNumber = receiverPhoneNumber
+            await this.repository.save(payment);
+    
+            //on cree la transaction
+            // const newPayment = await this.createpaiement(payload, getSenderInfos);
+            let historique: CreateHistoriqueResultDto = null
+            if (payment) {
+                const transaction = await this.transactionService.createTransaction({
+                    amount: amount,
+                    amountBeforeSending: payment.amountBeforeSending,
+                    amountAfterSending: payment.amountAfterSending,
+                    senderPhoneNumber: payment.senderPhoneNumber,
+                    reference: payment.reference,
+                    receiverPhoneNumber: payment.receiverPhoneNumber,
+                    fees: payment.fees,
+                    status: "PENDING",
+                    type: TransactionType.PAIEMENT,
+                })
+                historique = await this.createHistorique({
+                    sender: getSenderInfos,
+                    receiver: getReceiverInfos,
+                    senderIdentifiant: getSenderInfos.id,
+                    receiverIdentifiant: getReceiverInfos.id,
+                    referenceTransaction: payment.reference,
+                    transactionType: TransactionType.PAIEMENT,
+                    amount: amount,
+                    fees: payment.fees,
+                    status: "PENDING",
+                    icon: 'send'
+                })
+                //supprimer les données non utilisable
+                delete (historique.historique.sender)
+                delete (historique.historique.receiver)
+    
+                return {
+                    payment: payment,
+                    amount: amount,
+                    historique: historique.historique,
+                    transaction: transaction,
+                    fees: payment.fees,
+                    senderInfos: getSenderInfos,
+                    status: TransactionResponse.SUCCESS,
+                    receiverNumber: receiverPhoneNumber
+                }
+    
+            } else {
+                await this.repository.update(payment.id, {
+                    status: "FAILED"
+                })
+                return {
+                    payment: payment,
+                    amount: amount,
+                    historique: historique.historique,
+                    transaction: null,
+                    fees: payment.fees,
+                    senderInfos: getSenderInfos,
+                    status: TransactionResponse.ERROR,
+                    receiverNumber: receiverPhoneNumber
+                }
+            }
         }
+
     }
 
     /**
@@ -366,13 +381,13 @@ export class PaiementService {
                     const debitSender = await this.userService.updateUser(getSenderInfos.id, {
                         solde: (parseInt(getSenderInfos.solde) - parseInt(amount)).toString()
                     })
-                    if(parseInt(getSenderInfos.solde) - parseInt(amount) < 0 || parseInt(getSenderInfos.solde) < parseInt(amount)) {
+                    if (parseInt(getSenderInfos.solde) - parseInt(amount) < 0 || parseInt(getSenderInfos.solde) < parseInt(amount)) {
                         //update payment status
-                        await this.repository.update(payment.id, {status: PaiementType.FAILED})
+                        await this.repository.update(payment.id, { status: PaiementType.FAILED })
                         //update transaction status
-                        await this.transactionService.updateTransaction(transaction.id, {status: PaiementType.FAILED})
+                        await this.transactionService.updateTransaction(transaction.id, { status: PaiementType.FAILED })
                         //update historique status
-                        await this.historiqueService.updateHistorique(historique.historique.id, {status: PaiementType.FAILED})
+                        await this.historiqueService.updateHistorique(historique.historique.id, { status: PaiementType.FAILED })
                         throw new HttpException('Fonds insuffisants', HttpStatus.BAD_REQUEST)
                     }
                     if (debitSender.affected === 1) {
@@ -437,7 +452,7 @@ export class PaiementService {
                                         transactionStatus: "FAILED"
                                     })
                                     // create historique
-                                    await this.historiqueService.updateHistorique(historique.historique.id,{
+                                    await this.historiqueService.updateHistorique(historique.historique.id, {
                                         status: "FAILED",
                                     })
                                     return {

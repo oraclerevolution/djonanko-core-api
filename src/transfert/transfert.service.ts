@@ -36,133 +36,47 @@ export class TransfertService {
         const { senderPhoneNumber, receiverPhoneNumber, amount } = payload
         const getSenderInfos = await this.userService.getUserByPhoneNumber(senderPhoneNumber);
         const getReceiverInfos = await this.userService.getUserByPhoneNumber(receiverPhoneNumber);
-        if(parseInt(getSenderInfos.solde) < parseInt(amount)){
-            const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
-            const transfer = new Transfert()
-            transfer.amount = amount
-            if (getSenderInfos.premium === true) {
-                transfer.fees = "0"
-            }else{
-                transfer.fees = (0.01 * parseInt(amount)).toString()
-            }
-            transfer.amountBeforeSending = getSenderInfos.solde
-            transfer.reference = this.generateReference()
-            transfer.amountAfterSending = (balanceAfterSending).toString()
-            transfer.senderPhoneNumber = senderPhoneNumber
-            transfer.receiverPhoneNumber = receiverPhoneNumber
-            transfer.status = TransferType.FAILED
-
-            const transaction = await this.transactionService.createTransaction({
-                amount,
-                amountBeforeSending: getSenderInfos.solde,
-                amountAfterSending: balanceAfterSending.toString(),
-                senderPhoneNumber: getSenderInfos.numero,
-                reference: transfer.reference,
-                receiverPhoneNumber: getReceiverInfos.numero,
-                fees: transfer.fees,
-                status: "FAILED",
-                type: TransactionType.TRANSFERT
-            })
-
-            await this.historiqueService.createHistorique({
-                sender: getSenderInfos,
-                receiver: getReceiverInfos,
-                senderIdentifiant: getSenderInfos.id,
-                receiverIdentifiant: getReceiverInfos.id,
-                transactionType: TransactionType.TRANSFERT,
-                referenceTransaction: transfer.reference,
-                amount,
-                fees: transfer.fees,
-                status: "FAILED",
-                icon: "send"
-            })
+        if(getReceiverInfos === undefined){
             return {
-                transfer,
-                transaction,
+                transfer: null,
                 amount,
-                fees: transfer.fees,
-                senderInfos: getSenderInfos,
-                status: TransactionResponse.INSUFFICIENT_FUNDS
-            }
-        }else if(parseInt(amount) > getSenderInfos.cumulMensuelRestant){
-            const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
-            const transfer = new Transfert()
-            transfer.amount = amount
-            if (getSenderInfos.premium === true) {
-                transfer.fees = "0"
-            }else{
-                transfer.fees = (0.01 * parseInt(amount)).toString()
-            }
-            transfer.amountBeforeSending = getSenderInfos.solde
-            transfer.reference = this.generateReference()
-            transfer.amountAfterSending = (balanceAfterSending).toString()
-            transfer.senderPhoneNumber = senderPhoneNumber
-            transfer.receiverPhoneNumber = receiverPhoneNumber
-
-            const transaction = await this.transactionService.createTransaction({
-                amount,
-                amountBeforeSending: getSenderInfos.solde,
-                amountAfterSending: balanceAfterSending.toString(),
-                senderPhoneNumber: getSenderInfos.numero,
-                reference: transfer.reference,
-                receiverPhoneNumber: getReceiverInfos.numero,
-                fees: transfer.fees,
-                status: "FAILED",
-                type: TransactionType.TRANSFERT
-            })
-
-            await this.historiqueService.createHistorique({
-                sender: getSenderInfos,
-                receiver: getReceiverInfos,
-                senderIdentifiant: getSenderInfos.id,
-                receiverIdentifiant: getReceiverInfos.id,
-                transactionType: TransactionType.TRANSFERT,
-                referenceTransaction: transfer.reference,
-                amount,
-                fees: transfer.fees,
-                status: "FAILED",
-                icon: "send"
-            })
-
-            return {
-                transfer,
-                transaction,
-                amount,
-                fees: transfer.fees,
-                senderInfos: getSenderInfos,
-                status: TransactionResponse.MONTHLY_LIMIT_REACHED
+                historique: null,
+                transaction: null,
+                fees: null,
+                senderInfos: null,
+                status: TransactionResponse.NOT_FOUND,
+                receiverNumber: receiverPhoneNumber
             }
         }else{
-            const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
-            const transfer = new Transfert()
-            transfer.amount = amount
-            if (getSenderInfos.premium === true) {
-                transfer.fees = "0"
-            } else {
-                transfer.fees = (0.01 * parseInt(amount)).toString()
-            }
-            transfer.amountBeforeSending = getSenderInfos.solde
-            transfer.reference = this.generateReference()
-            transfer.amountAfterSending = (balanceAfterSending).toString()
-            transfer.senderPhoneNumber = senderPhoneNumber
-            transfer.receiverPhoneNumber = receiverPhoneNumber
-            await this.repository.save(transfer)
-
-            let historique: CreateHistoriqueResultDto = null
-            let transaction: Transactions = null
-            if(transfer){
-                transaction = await this.transactionService.createTransaction({
-                    amount: amount,
-                    amountBeforeSending: transfer.amountBeforeSending,
-                    amountAfterSending: transfer.amountAfterSending,
-                    senderPhoneNumber: transfer.senderPhoneNumber,
+            if(parseInt(getSenderInfos.solde) < parseInt(amount)){
+                const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
+                const transfer = new Transfert()
+                transfer.amount = amount
+                if (getSenderInfos.premium === true) {
+                    transfer.fees = "0"
+                }else{
+                    transfer.fees = (0.01 * parseInt(amount)).toString()
+                }
+                transfer.amountBeforeSending = getSenderInfos.solde
+                transfer.reference = this.generateReference()
+                transfer.amountAfterSending = (balanceAfterSending).toString()
+                transfer.senderPhoneNumber = senderPhoneNumber
+                transfer.receiverPhoneNumber = receiverPhoneNumber
+                transfer.status = TransferType.FAILED
+    
+                const transaction = await this.transactionService.createTransaction({
+                    amount,
+                    amountBeforeSending: getSenderInfos.solde,
+                    amountAfterSending: balanceAfterSending.toString(),
+                    senderPhoneNumber: getSenderInfos.numero,
                     reference: transfer.reference,
-                    receiverPhoneNumber: transfer.receiverPhoneNumber,
+                    receiverPhoneNumber: getReceiverInfos.numero,
                     fees: transfer.fees,
-                    status: "PENDING",
-                    type: TransactionType.TRANSFERT,
+                    status: "FAILED",
+                    type: TransactionType.TRANSFERT
                 })
-                historique = await this.createHistorique({
+    
+                await this.historiqueService.createHistorique({
                     sender: getSenderInfos,
                     receiver: getReceiverInfos,
                     senderIdentifiant: getSenderInfos.id,
@@ -171,22 +85,121 @@ export class TransfertService {
                     referenceTransaction: transfer.reference,
                     amount,
                     fees: transfer.fees,
-                    status: "PENDING",
+                    status: "FAILED",
                     icon: "send"
                 })
-                delete(historique.historique.sender)
-                delete(historique.historique.receiver)
-            }
+                return {
+                    transfer,
+                    transaction,
+                    amount,
+                    fees: transfer.fees,
+                    senderInfos: getSenderInfos,
+                    status: TransactionResponse.INSUFFICIENT_FUNDS
+                }
+            }else if(parseInt(amount) > getSenderInfos.cumulMensuelRestant){
+                const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
+                const transfer = new Transfert()
+                transfer.amount = amount
+                if (getSenderInfos.premium === true) {
+                    transfer.fees = "0"
+                }else{
+                    transfer.fees = (0.01 * parseInt(amount)).toString()
+                }
+                transfer.amountBeforeSending = getSenderInfos.solde
+                transfer.reference = this.generateReference()
+                transfer.amountAfterSending = (balanceAfterSending).toString()
+                transfer.senderPhoneNumber = senderPhoneNumber
+                transfer.receiverPhoneNumber = receiverPhoneNumber
     
-            return {
-                transfer,
-                amount,
-                historique: historique.historique,
-                transaction,
-                fees: transfer.fees,
-                senderInfos: getSenderInfos,
-                status: TransactionResponse.SUCCESS,
-                receiverNumber: receiverPhoneNumber
+                const transaction = await this.transactionService.createTransaction({
+                    amount,
+                    amountBeforeSending: getSenderInfos.solde,
+                    amountAfterSending: balanceAfterSending.toString(),
+                    senderPhoneNumber: getSenderInfos.numero,
+                    reference: transfer.reference,
+                    receiverPhoneNumber: getReceiverInfos.numero,
+                    fees: transfer.fees,
+                    status: "FAILED",
+                    type: TransactionType.TRANSFERT
+                })
+    
+                await this.historiqueService.createHistorique({
+                    sender: getSenderInfos,
+                    receiver: getReceiverInfos,
+                    senderIdentifiant: getSenderInfos.id,
+                    receiverIdentifiant: getReceiverInfos.id,
+                    transactionType: TransactionType.TRANSFERT,
+                    referenceTransaction: transfer.reference,
+                    amount,
+                    fees: transfer.fees,
+                    status: "FAILED",
+                    icon: "send"
+                })
+    
+                return {
+                    transfer,
+                    transaction,
+                    amount,
+                    fees: transfer.fees,
+                    senderInfos: getSenderInfos,
+                    status: TransactionResponse.MONTHLY_LIMIT_REACHED
+                }
+            }else{
+                const balanceAfterSending = parseInt(getSenderInfos.solde) - this.getTransactionFees(parseInt(amount), getSenderInfos.premium);
+                const transfer = new Transfert()
+                transfer.amount = amount
+                if (getSenderInfos.premium === true) {
+                    transfer.fees = "0"
+                } else {
+                    transfer.fees = (0.01 * parseInt(amount)).toString()
+                }
+                transfer.amountBeforeSending = getSenderInfos.solde
+                transfer.reference = this.generateReference()
+                transfer.amountAfterSending = (balanceAfterSending).toString()
+                transfer.senderPhoneNumber = senderPhoneNumber
+                transfer.receiverPhoneNumber = receiverPhoneNumber
+                await this.repository.save(transfer)
+    
+                let historique: CreateHistoriqueResultDto = null
+                let transaction: Transactions = null
+                if(transfer){
+                    transaction = await this.transactionService.createTransaction({
+                        amount: amount,
+                        amountBeforeSending: transfer.amountBeforeSending,
+                        amountAfterSending: transfer.amountAfterSending,
+                        senderPhoneNumber: transfer.senderPhoneNumber,
+                        reference: transfer.reference,
+                        receiverPhoneNumber: transfer.receiverPhoneNumber,
+                        fees: transfer.fees,
+                        status: "PENDING",
+                        type: TransactionType.TRANSFERT,
+                    })
+                    historique = await this.createHistorique({
+                        sender: getSenderInfos,
+                        receiver: getReceiverInfos,
+                        senderIdentifiant: getSenderInfos.id,
+                        receiverIdentifiant: getReceiverInfos.id,
+                        transactionType: TransactionType.TRANSFERT,
+                        referenceTransaction: transfer.reference,
+                        amount,
+                        fees: transfer.fees,
+                        status: "PENDING",
+                        icon: "send"
+                    })
+                    delete(historique.historique.sender)
+                    delete(historique.historique.receiver)
+                }
+        
+                return {
+                    transfer,
+                    amount,
+                    historique: historique.historique,
+                    transaction,
+                    fees: transfer.fees,
+                    senderInfos: getSenderInfos,
+                    status: TransactionResponse.SUCCESS,
+                    receiverNumber: receiverPhoneNumber
+                }
             }
         }
     }
