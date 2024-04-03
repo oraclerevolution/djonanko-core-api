@@ -342,6 +342,18 @@ export class PaiementService {
             });
           }
         } else {
+          //notification au sender
+          await this.notificationsService.sendNotification(
+            senderInfos.expoPushToken,
+            'Paiement Djonanko',
+            `Votre paiement de ${amount} FCFA a été effectue avec succes.`,
+          );
+          //notification au receiver
+          await this.notificationsService.sendNotification(
+            getReceiverInfos.expoPushToken,
+            'Paiement Djonanko',
+            `${senderInfos.fullname} a effectué un paiement de ${amount} FCFA`,
+          );
           return {
             status: TransactionResponse.ERROR,
           };
