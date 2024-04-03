@@ -341,7 +341,6 @@ export class PaiementService {
               premiumActivated: true,
             });
           }
-        } else {
           //notification au sender
           await this.notificationsService.sendNotification(
             senderInfos.expoPushToken,
@@ -354,6 +353,7 @@ export class PaiementService {
             'Paiement Djonanko',
             `${senderInfos.fullname} a effectué un paiement de ${amount} FCFA`,
           );
+        } else {
           return {
             status: TransactionResponse.ERROR,
           };
