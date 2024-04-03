@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { Employee } from './entities/employee.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,174 +24,205 @@ import { Transfert } from 'src/transfert/entities/transfert.entity';
 
 @Injectable()
 export class EmployeeService {
-    constructor(
-        @InjectRepository(Employee) private readonly repository: Repository<Employee>,
-        private readonly userService: UserService,
-        @Inject(forwardRef(() => PaiementService)) private readonly paiementService: PaiementService,
-        @Inject(forwardRef(() => TransfertService)) private readonly transfertService: TransfertService
-    ) { }
+  constructor(
+    @InjectRepository(Employee)
+    private readonly repository: Repository<Employee>,
+    private readonly userService: UserService,
+    @Inject(forwardRef(() => PaiementService))
+    private readonly paiementService: PaiementService,
+    @Inject(forwardRef(() => TransfertService))
+    private readonly transfertService: TransfertService,
+  ) {}
 
-    async create(payload: CreateEmployeeDto, user: User): Promise<Employee> {
-        const { phoneNumber, address } = payload;
-        const getUser = await this.userService.getUserByPhoneNumber(phoneNumber);
-        if (!getUser) throw new BadRequestException("Ce numéro n'est pas valide");
-        const employee = new Employee();
-        employee.fullname = getUser.fullname
-        employee.phoneNumber = phoneNumber
-        employee.userid = user.id
-        employee.email = getUser.email
-        employee.address = address
+  async create(payload: CreateEmployeeDto, user: User): Promise<Employee> {
+    const { phoneNumber, address } = payload;
+    const getUser = await this.userService.getUserByPhoneNumber(phoneNumber);
+    if (!getUser) throw new BadRequestException("Ce numéro n'est pas valide");
+    const employee = new Employee();
+    employee.fullname = getUser.fullname;
+    employee.phoneNumber = phoneNumber;
+    employee.userid = user.id;
+    employee.email = getUser.email;
+    employee.address = address;
 
-        const createdEmployee = await this.repository.save(employee);
+    const createdEmployee = await this.repository.save(employee);
 
-        if (createdEmployee) {
-            await this.userService.updateUser(getUser.id, {
-                userType: UserType.COMMERCANT
-            })
-        }
-
-        return createdEmployee
+    if (createdEmployee) {
+      await this.userService.updateUser(getUser.id, {
+        userType: UserType.COMMERCANT,
+      });
     }
 
-    async getEmployees(
-        merchantId: number,
-    ): Promise<GetMerchantEmployeesDto> {
-        const [commercants, count] = await this.repository.findAndCount({
-            where: {
-                userid: merchantId
-            }
-        });
-        return { commercants, count };
+    return createdEmployee;
+  }
+
+  async getEmployees(merchantId: number): Promise<GetMerchantEmployeesDto> {
+    const [commercants, count] = await this.repository.findAndCount({
+      where: {
+        userid: merchantId,
+      },
+    });
+    return { commercants, count };
+  }
+
+  async blockEmployee(id: number): Promise<void> {
+    await this.userService.updateUser(id, { isActive: false });
+  }
+
+  async getAnEmployeeActivity(id: string): Promise<EmployeeActivityDto> {
+    const employee = await this.repository.findOne(id);
+    const employeePaiements =
+      await this.paiementService.getPaiementByReceiverNumber(
+        employee.phoneNumber,
+      );
+    const employeeTransferts =
+      await this.transfertService.getTransferByReceiverNumber(
+        employee.phoneNumber,
+      );
+    const paymentTotal = employeePaiements.reduce(
+      (total, paiement) => total + parseInt(paiement.amount),
+      0,
+    );
+    const transfertTotal = employeeTransferts.reduce(
+      (total, transfert) => total + parseInt(transfert.amount),
+      0,
+    );
+
+    return {
+      paiements: employeePaiements,
+      transferts: employeeTransferts,
+      totalPaiement: paymentTotal,
+      totalTransfert: transfertTotal,
+    };
+  }
+
+  async getAllEmployeesActivity(
+    merchantId: number,
+  ): Promise<GetEmployeeTotalAmountReturnDto> {
+    const employees = await this.repository.find({
+      where: {
+        userid: merchantId,
+      },
+    });
+
+    if (!employees || employees.length === 0) {
+      throw new NotFoundException("Ce marchand n'a pas d'employés");
     }
 
-    async blockEmployee(id: number): Promise<void> {
-        await this.userService.updateUser(id, { isActive: false });
+    let totalAmount = 0;
+    let totalTransaction = 0;
+
+    for (const employee of employees) {
+      const user = await this.userService.getUserByPhoneNumber(
+        employee.phoneNumber,
+      );
+
+      if (!user) {
+        throw new NotFoundException(
+          `User not found for employee with ID ${employee.id}`,
+        );
+      }
+
+      const payments = await this.paiementService.getPaiementByReceiverNumber(
+        user.numero,
+      );
+      for (const payment of payments) {
+        if (payment.status === 'SUCCESS') totalTransaction += 1;
+      }
+      const transfers = await this.transfertService.getTransferByReceiverNumber(
+        user.numero,
+      );
+      for (const transfer of transfers) {
+        if (transfer.status === 'SUCCESS') totalTransaction += 1;
+      }
+
+      for (const payment of payments) {
+        totalAmount += parseInt(payment.amount);
+      }
+
+      for (const transfer of transfers) {
+        totalAmount += parseInt(transfer.amount);
+      }
     }
 
-    async getAnEmployeeActivity(id: string): Promise<EmployeeActivityDto> {
-        const employee = await this.repository.findOne(id);
-        const employeePaiements = await this.paiementService.getPaiementByReceiverNumber(employee.phoneNumber);
-        const employeeTransferts = await this.transfertService.getTransferByReceiverNumber(employee.phoneNumber);
-        const paymentTotal = employeePaiements.reduce((total, paiement) => total + parseInt(paiement.amount), 0);
-        const transfertTotal = employeeTransferts.reduce((total, transfert) => total + parseInt(transfert.amount), 0);
+    return {
+      merchantId,
+      totalAmount,
+      totalTransaction,
+    };
+  }
 
-        return {
-            paiements: employeePaiements,
-            transferts: employeeTransferts,
-            totalPaiement: paymentTotal,
-            totalTransfert: transfertTotal
-        };
+  async calculateDailyTransactions(
+    merchantId: number,
+  ): Promise<DailyTransactionsReturnDto[]> {
+    // const operations = await this.getAnEmployeeActivity(employeeId);
+    //je recupère tous les employés du marchands
+    const employees = await this.repository.find({
+      where: {
+        userid: merchantId,
+      },
+    });
+
+    const allPayment: Paiement[] = [];
+    const allTransfert: Transfert[] = [];
+    for (const employee of employees) {
+      const paiements = await this.paiementService.getPaiementByReceiverNumber(
+        employee.phoneNumber,
+      );
+      const transferts =
+        await this.transfertService.getTransferByReceiverNumber(
+          employee.phoneNumber,
+        );
+      if (paiements.length > 0) allPayment.push(...paiements);
+      if (transferts.length > 0) allTransfert.push(...transferts);
     }
 
+    const transactions = allPayment.concat(allTransfert);
+    const dailyTransactionsMap = new Map<string, number>(); // Utilisation d'une map pour stocker les totaux par jour
 
-    async getAllEmployeesActivity(merchantId: number): Promise<GetEmployeeTotalAmountReturnDto> {
-        const employees = await this.repository.find({
-            where: {
-                userid: merchantId
-            }
-        });
+    for (const transaction of transactions) {
+      const transactionDate = new Date(transaction.createdAt).toDateString(); // Obtention de la date de la transaction (sans l'heure)
+      const transactionAmount = parseFloat(transaction.amount); // Conversion du montant en nombre
 
-        if (!employees || employees.length === 0) {
-            throw new NotFoundException('Ce marchand n\'a pas d\'employés');
-        }
-
-        let totalAmount = 0;
-        let totalTransaction = 0;
-
-        for (const employee of employees) {
-            const user = await this.userService.getUserByPhoneNumber(employee.phoneNumber);
-
-            if (!user) {
-                throw new NotFoundException(`User not found for employee with ID ${employee.id}`);
-            }
-
-            const payments = await this.paiementService.getPaiementByReceiverNumber(user.numero);
-            for (const payment of payments) {
-                if(payment.status === "SUCCESS") totalTransaction += 1;
-            }
-            const transfers = await this.transfertService.getTransferByReceiverNumber(user.numero);
-            for (const transfer of transfers) {
-                if(transfer.status === "SUCCESS") totalTransaction += 1;
-            }
-
-            for (const payment of payments) {
-                totalAmount += parseInt(payment.amount);
-            }
-
-            for (const transfer of transfers) {
-                totalAmount += parseInt(transfer.amount);
-            }
-
-        }
-
-        return {
-            merchantId,
-            totalAmount,
-            totalTransaction
-        }
+      if (dailyTransactionsMap.has(transactionDate)) {
+        // Si la date existe déjà dans la map, ajoute le montant à son total
+        const currentTotal = dailyTransactionsMap.get(transactionDate) || 0;
+        dailyTransactionsMap.set(
+          transactionDate,
+          currentTotal + transactionAmount,
+        );
+      } else {
+        // Si la date n'existe pas encore dans la map, initialise le total à ce montant
+        dailyTransactionsMap.set(transactionDate, transactionAmount);
+      }
     }
 
-    async calculateDailyTransactions(merchantId: number): Promise<DailyTransactionsReturnDto[]> {
-        // const operations = await this.getAnEmployeeActivity(employeeId);
-        //je recupère tous les employés du marchands
-        const employees = await this.repository.find({
-            where: {
-                userid: merchantId
-            }
-        });
-
-        let allPayment: Paiement[] = [];
-        let allTransfert: Transfert[] = [];
-        for (const employee of employees) {
-            const paiements = await this.paiementService.getPaiementByReceiverNumber(employee.phoneNumber);
-            const transferts = await this.transfertService.getTransferByReceiverNumber(employee.phoneNumber);
-            if(paiements.length > 0) allPayment.push(...paiements);
-            if(transferts.length > 0) allTransfert.push(...transferts);
-        }
-
-        const transactions = allPayment.concat(allTransfert);
-        const dailyTransactionsMap = new Map<string, number>(); // Utilisation d'une map pour stocker les totaux par jour
-
-        for (const transaction of transactions) {
-            const transactionDate = new Date(transaction.createdAt).toDateString(); // Obtention de la date de la transaction (sans l'heure)
-            const transactionAmount = parseFloat(transaction.amount); // Conversion du montant en nombre
-
-            if (dailyTransactionsMap.has(transactionDate)) {
-                // Si la date existe déjà dans la map, ajoute le montant à son total
-                const currentTotal = dailyTransactionsMap.get(transactionDate) || 0;
-                dailyTransactionsMap.set(transactionDate, currentTotal + transactionAmount);
-            } else {
-                // Si la date n'existe pas encore dans la map, initialise le total à ce montant
-                dailyTransactionsMap.set(transactionDate, transactionAmount);
-            }
-        }
-
-        // Conversion de la map en un tableau d'objets DailyTransactionsDto
-        const dailyTransactionsList: DailyTransactionsReturnDto[] = [];
-        for (const [date, amount] of dailyTransactionsMap.entries()) {
-            dailyTransactionsList.push({ date: new Date(date), amount });
-        }
-
-        return dailyTransactionsList;
+    // Conversion de la map en un tableau d'objets DailyTransactionsDto
+    const dailyTransactionsList: DailyTransactionsReturnDto[] = [];
+    for (const [date, amount] of dailyTransactionsMap.entries()) {
+      dailyTransactionsList.push({ date: new Date(date), amount });
     }
 
-    async getMerchantEmployee(merchantId: number): Promise<Employee[]> {
-        //ici le merchantId n'est pas celui de la table marchands mais de la table user
-        const employees = await this.repository.find({
-            where: {
-                userid: merchantId
-            }
-        })
+    return dailyTransactionsList;
+  }
 
-        return employees
-    }
+  async getMerchantEmployee(merchantId: number): Promise<Employee[]> {
+    //ici le merchantId n'est pas celui de la table marchands mais de la table user
+    const employees = await this.repository.find({
+      where: {
+        userid: merchantId,
+      },
+    });
 
-    async update(id: string, payload: UpdateEmployeeDto): Promise<Employee> {
-        await this.repository.update(id, payload);
-        return await this.repository.findOne(id);
-    }
+    return employees;
+  }
 
-    async delete(id: string): Promise<void> {
-        await this.repository.delete(id);
-    }
+  async update(id: string, payload: UpdateEmployeeDto): Promise<Employee> {
+    await this.repository.update(id, payload);
+    return await this.repository.findOne(id);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.repository.delete(id);
+  }
 }

@@ -9,21 +9,21 @@ import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module
 import { CompteReservationModule } from 'src/compte-reservation/compte-reservation.module';
 import { ConfigModule } from '@nestjs/config';
 import { TransactionsModule } from 'src/transactions/transactions.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Paiement
-    ]),
+    TypeOrmModule.forFeature([Paiement]),
     forwardRef(() => HistoriquesModule),
     UserModule,
     ConfigModule,
     CompteCollecteModule,
     CompteReservationModule,
-    TransactionsModule
+    TransactionsModule,
+    NotificationsModule,
   ],
   controllers: [PaiementController],
   providers: [PaiementService],
-  exports: [PaiementService]
+  exports: [PaiementService],
 })
 export class PaiementModule {}
