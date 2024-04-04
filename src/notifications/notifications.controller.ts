@@ -17,4 +17,14 @@ export class NotificationsController {
       payload.body,
     );
   }
+
+  @Post('/send-notification-chunk')
+  async sendNotificationsChunk(
+    @Body() payload: { title: string; body: string },
+  ) {
+    return this.notificationsService.sendNotificationsChunk(
+      payload.title,
+      payload.body,
+    );
+  }
 }
