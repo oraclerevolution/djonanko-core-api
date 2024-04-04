@@ -69,12 +69,6 @@ export class UserService {
       );
     }
 
-    if (user.alreadyLogged === true) {
-      throw new BadRequestException(
-        "Connexion impossible, l'utilisateur a déjà effectue une connexion",
-      );
-    }
-
     const hashedPassword = await bcrypt.hash(password, user.salt);
     if (hashedPassword === user.password) {
       const payload = {
@@ -90,7 +84,6 @@ export class UserService {
         const phoneNumber = user.numero;
         await this.sendSMSToUser({ phoneNumber, message });
         console.log('otp', otp);
-        this.updateUser(user.id, { alreadyLogged: true });
         return {
           access_token: token,
           user,
@@ -104,10 +97,6 @@ export class UserService {
         'Connexion impossible, vérifiez vos identifiants',
       );
     }
-  }
-
-  logout(userId: number) {
-    return this.repository.update(userId, { alreadyLogged: false });
   }
 
   generateVerificationCode() {

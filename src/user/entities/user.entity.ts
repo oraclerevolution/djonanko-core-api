@@ -62,9 +62,6 @@ export class User {
   @Column({ nullable: true, enum: [1, 2, 3, 4], name: 'favorite_operator' })
   favoriteOperator: number;
 
-  @Column({ default: false })
-  alreadyLogged: boolean;
-
   @Column({ nullable: false, default: false })
   premium: boolean;
 
