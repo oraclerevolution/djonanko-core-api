@@ -351,7 +351,7 @@ export class PaiementService {
           await this.notificationsService.sendNotification(
             getReceiverInfos.expoPushToken,
             'Paiement Djonanko',
-            `${senderInfos.fullname} a effectué un paiement de ${amount} FCFA`,
+            `${getReceiverInfos.fullname} a effectué un paiement de ${amount} FCFA`,
           );
         } else {
           return {

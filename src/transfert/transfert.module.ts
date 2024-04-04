@@ -9,6 +9,7 @@ import { CompteCollecteModule } from 'src/compte-collecte/compte-collecte.module
 import { CompteReservationModule } from 'src/compte-reservation/compte-reservation.module';
 import { ConfigModule } from '@nestjs/config';
 import { TransactionsModule } from 'src/transactions/transactions.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { TransactionsModule } from 'src/transactions/transactions.module';
     CompteCollecteModule,
     CompteReservationModule,
     ConfigModule,
-    TransactionsModule
+    TransactionsModule,
+    NotificationsModule,
   ],
   controllers: [TransfertController],
   providers: [TransfertService],
