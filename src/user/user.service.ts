@@ -12,13 +12,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserAuth } from './enums/user-auth.enum';
 import * as phoneToken from 'generate-sms-verification-code';
-import { SendSmsDto } from './dto/send-sms.dto';
 import { ConfigService } from '@nestjs/config';
-import { AuthType, Infobip } from '@infobip-api/sdk';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FavoriteOperator } from './interfaces/favorite-operator.interface';
 import { UserType } from './enums/user-type.enum';
+import { sendSms } from 'src/libs/sms.lib';
 
 @Injectable()
 export class UserService {
@@ -47,7 +46,7 @@ export class UserService {
       const message =
         'Votre inscription sur Djonanko CI a bien été prise en compte. Merci de profiter pleinenement de nos services en toute sécurité.';
       const phoneNumber = user.numero;
-      await this.sendSMSToUser({ phoneNumber, message });
+      await sendSms({ phoneNumber, message });
       return user;
     } catch (error) {
       console.log('error', error);
@@ -82,7 +81,7 @@ export class UserService {
       if (otp !== 400) {
         const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`;
         const phoneNumber = user.numero;
-        await this.sendSMSToUser({ phoneNumber, message });
+        await sendSms({ phoneNumber, message });
         console.log('otp', otp);
         return {
           access_token: token,
@@ -154,31 +153,6 @@ export class UserService {
 
   async updateUser(id: number, user: UpdateUserDto): Promise<UpdateResult> {
     return await this.repository.update(id, user);
-  }
-
-  async sendSMSToUser(payload: SendSmsDto): Promise<any> {
-    const { phoneNumber, message } = payload;
-    const infobip = new Infobip({
-      baseUrl: this.configService.get<string>('INFOBIP_BASE_URL'),
-      apiKey: this.configService.get<string>('INFOBIP_API_KEY'),
-      authType: AuthType.ApiKey,
-    });
-
-    const response = await infobip.channels.sms.send({
-      messages: [
-        {
-          destinations: [
-            {
-              to: `+225${phoneNumber}`,
-            },
-          ],
-          from: 'Djonanko CI',
-          text: message,
-        },
-      ],
-    });
-
-    return response;
   }
 
   async getUsersPremiums(): Promise<User[]> {
