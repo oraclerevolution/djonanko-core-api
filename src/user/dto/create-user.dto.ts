@@ -1,3 +1,6 @@
-import { User } from "../entities/user.entity";
-
-export type CreateUserDto = User
+export type CreateUserDto = {
+  fullname: string;
+  numero: string;
+  password: string;
+  referralCode?: string;
+};

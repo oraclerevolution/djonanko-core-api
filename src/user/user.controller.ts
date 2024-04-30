@@ -122,4 +122,9 @@ export class UserController {
   ): Promise<FavoriteOperator> {
     return await this.userService.getUserFavoriteOperator(id);
   }
+
+  @Get('get-user-referral-points')
+  async getUserReferralPoints(userId: number): Promise<string> {
+    return await this.userService.getReferralPointsByUserId(userId);
+  }
 }

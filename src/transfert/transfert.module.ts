@@ -10,6 +10,7 @@ import { CompteReservationModule } from 'src/compte-reservation/compte-reservati
 import { ConfigModule } from '@nestjs/config';
 import { TransactionsModule } from 'src/transactions/transactions.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
+import { ReferralsModule } from 'src/referrals/referrals.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
     ConfigModule,
     TransactionsModule,
     NotificationsModule,
+    ReferralsModule,
   ],
   controllers: [TransfertController],
   providers: [TransfertService],

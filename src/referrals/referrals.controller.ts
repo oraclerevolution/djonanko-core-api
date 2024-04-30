@@ -17,17 +17,12 @@ export class ReferralsController {
   }
 
   @Get('all-user-referrals')
-  async getAllUserReferrals(userId: number): Promise<Referrals[]> {
+  async getAllUserReferrals(userId: number): Promise<Referrals> {
     return await this.referralsService.getReferralByUserId(userId);
   }
 
   @Get('all-referrals')
   async getAllReferrals(): Promise<[Referrals[], number]> {
     return await this.referralsService.getAllReferrals();
-  }
-
-  @Get('get-user-referral-points')
-  async getUserReferralPoints(userId: number): Promise<string> {
-    return await this.referralsService.getReferralPointsByUserId(userId);
   }
 }

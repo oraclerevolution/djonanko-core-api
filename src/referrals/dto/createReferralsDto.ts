@@ -1,3 +1,4 @@
-import { Referrals } from '../entities/referrals.entity';
-
-export type CreateReferralDto = Referrals;
+export type CreateReferralDto = {
+  hostId: number;
+  guessId: number;
+};

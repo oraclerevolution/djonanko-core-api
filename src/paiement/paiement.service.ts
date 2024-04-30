@@ -39,6 +39,7 @@ import { ConfigService } from '@nestjs/config';
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { Transactions } from 'src/transactions/entities/transactions.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class PaiementService {
@@ -54,6 +55,7 @@ export class PaiementService {
     @Inject(forwardRef(() => TransactionsService))
     private readonly transactionService: TransactionsService,
     private readonly notificationsService: NotificationsService,
+    private readonly referralsService: ReferralsService,
   ) {}
 
   /**
@@ -335,12 +337,31 @@ export class PaiementService {
             status: PaiementType.SUCCESS,
           });
 
+          //check is the payment is abonnement
           if (abonnement && abonnement === true) {
             await this.userService.updateUser(senderInfos.id, {
               premium: true,
               premiumActivated: true,
             });
           }
+
+          //check if user is new
+          const isNewUser = await this.referralsService.getReferralByUserId(
+            senderInfos.id,
+          );
+          if (isNewUser.isNew === true) {
+            const host = await this.userService.getUserById(isNewUser.hostId);
+            if (host) {
+              const currentPoint = host.referralAmountToPoint;
+              await this.userService.updateUser(host.id, {
+                referralAmountToPoint: currentPoint + 500,
+              });
+              await this.referralsService.updateReferral(isNewUser.id, {
+                isNew: false,
+              });
+            }
+          }
+
           //notification au sender
           await this.notificationsService.sendNotification(
             senderInfos.expoPushToken,

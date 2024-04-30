@@ -18,6 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { FavoriteOperator } from './interfaces/favorite-operator.interface';
 import { UserType } from './enums/user-type.enum';
 import { sendSms } from 'src/libs/sms.lib';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class UserService {
@@ -31,6 +32,7 @@ export class UserService {
     @InjectRepository(User) private readonly repository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly referralsService: ReferralsService,
   ) {}
 
   async register(payload: CreateUserDto): Promise<User> {
@@ -40,6 +42,15 @@ export class UserService {
     user.referralCode = this.generateReferralCode();
     user.salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, user.salt);
+    if (payload.referralCode) {
+      const host = await this.getUserByReferalCode(payload.referralCode);
+      if (host) {
+        await this.referralsService.createReferral({
+          hostId: host.id,
+          guessId: user.id,
+        });
+      }
+    }
 
     try {
       await this.repository.save(user);
@@ -288,5 +299,22 @@ export class UserService {
     });
     const usersTokens = users.map((user) => user.expoPushToken);
     return usersTokens;
+  }
+
+  async getUserByReferalCode(code: string): Promise<User> {
+    const user = await this.repository.findOne({
+      where: {
+        referralCode: code,
+      },
+    });
+    if (user) {
+      return user;
+    }
+  }
+
+  async getReferralPointsByUserId(id: number): Promise<string> {
+    const user = await this.getUserById(id);
+    const referalsPoints = user.referralAmountToPoint;
+    return referalsPoints;
   }
 }

@@ -12,4 +12,9 @@ export class Referrals {
 
   @Column()
   guessId: number;
+
+  @Column({
+    default: true,
+  })
+  isNew: boolean;
 }
