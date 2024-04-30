@@ -1,3 +1,3 @@
-import { Referrals } from "../entities/referrals.entity";
+import { Referrals } from '../entities/referrals.entity';
 
-export type CreateReferralDto = Referrals
+export type CreateReferralDto = Referrals;

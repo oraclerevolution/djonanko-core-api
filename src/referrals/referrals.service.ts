@@ -7,29 +7,30 @@ import { CreateReferralDto } from './dto/createReferralsDto';
 
 @Injectable()
 export class ReferralsService {
-    constructor(
-        @InjectRepository(Referrals) private readonly repository: Repository<Referrals>,
-        private readonly userService: UserService
-    ) {}
+  constructor(
+    @InjectRepository(Referrals)
+    private readonly repository: Repository<Referrals>,
+    private readonly userService: UserService,
+  ) {}
 
-    async createReferral(payload: CreateReferralDto): Promise<Referrals> {
-        return await this.repository.save(payload)
-    }
+  async createReferral(payload: CreateReferralDto): Promise<Referrals> {
+    return await this.repository.save(payload);
+  }
 
-    async getReferralByUserId(userId: number): Promise<Referrals[]> {
-        return await this.repository.find({
-            where: {
-                userId
-            }
-        })
-    }
+  async getReferralByUserId(userId: number): Promise<Referrals[]> {
+    return await this.repository.find({
+      where: {
+        userId,
+      },
+    });
+  }
 
-    async getAllReferrals(): Promise<[Referrals[], number]> {
-        return await this.repository.findAndCount()
-    }
+  async getAllReferrals(): Promise<[Referrals[], number]> {
+    return await this.repository.findAndCount();
+  }
 
-    async getReferralPointsByUserId(userId: number): Promise<string> {
-        const user = await this.userService.getUserById(userId)
-        return user.referralAmountToPoint
-    }
+  async getReferralPointsByUserId(userId: number): Promise<string> {
+    const user = await this.userService.getUserById(userId);
+    return user.referralAmountToPoint;
+  }
 }
