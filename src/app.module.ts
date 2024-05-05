@@ -39,9 +39,10 @@ import { MonitoringModule } from './monitoring/monitoring.module';
       password: process.env.TYPEORM_PASSWORD,
       database: process.env.TYPEORM_DATABASE,
       entities: ['dist/**/*.entity{.ts,.js}'],
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false }
+          : false,
       synchronize: true,
     }),
     ScheduleModule.forRoot(),

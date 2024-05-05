@@ -71,6 +71,7 @@ export class UserService {
     const user = await this.repository
       .createQueryBuilder('user')
       .where('user.numero = :numero', { numero })
+      .andWhere('user.status = :status', { status: true })
       .getOne();
     //if user doesn't exist, we throw an error
     if (!user) {
@@ -137,10 +138,14 @@ export class UserService {
     return referralCode;
   }
 
-  async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
+  async getUserByPhoneNumber(
+    phoneNumber: string,
+    status?: true,
+  ): Promise<User> {
     return await this.repository
       .createQueryBuilder('user')
       .where('user.numero = :phoneNumber', { phoneNumber })
+      .andWhere('user.status = :status', { status })
       .getOne();
   }
 
@@ -148,6 +153,7 @@ export class UserService {
     const contact = await this.repository.find({
       where: {
         numero: phoneNumber,
+        status: true,
       },
     });
     if (contact) {
@@ -159,7 +165,12 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<User> {
-    return await this.repository.findOne(id);
+    return await this.repository.findOne({
+      where: {
+        id,
+        status: true,
+      },
+    });
   }
 
   async updateUser(id: number, user: UpdateUserDto): Promise<UpdateResult> {
@@ -171,6 +182,7 @@ export class UserService {
       where: {
         premium: true,
         premiumActivated: false,
+        status: true,
       },
     });
   }
@@ -179,6 +191,7 @@ export class UserService {
     return await this.repository.find({
       where: {
         premium: true,
+        status: true,
       },
     });
   }
@@ -199,7 +212,12 @@ export class UserService {
    * @return {Promise<{status: boolean}>} - The status of the verification.
    */
   async verifyUserPassword(id: number, payload: UpdateUserDto) {
-    const user = await this.repository.findOne(id);
+    const user = await this.repository.findOne({
+      where: {
+        id,
+        status: true,
+      },
+    });
     const hashedPassword = await bcrypt.hash(payload.password, user.salt);
     if (hashedPassword === user.password) {
       return {
@@ -222,7 +240,12 @@ export class UserService {
   async updateUserPassword(id: number, payload: UpdateUserDto) {
     const { password } = payload;
 
-    const user = await this.repository.findOne(id);
+    const user = await this.repository.findOne({
+      where: {
+        id,
+        status: true,
+      },
+    });
     const hashedPassword = await bcrypt.hash(password, user.salt);
     return await this.repository.update(id, {
       password: hashedPassword,
@@ -230,7 +253,12 @@ export class UserService {
   }
 
   async getUserFavoriteOperator(id: number): Promise<FavoriteOperator> {
-    const user = await this.repository.findOne(id);
+    const user = await this.repository.findOne({
+      where: {
+        id,
+        status: true,
+      },
+    });
     return {
       favoriteOperator: user.favoriteOperator,
       phoneNumber: user.numero,
@@ -238,7 +266,12 @@ export class UserService {
   }
 
   async getUserMobileMoney(id: number, mobileMoney: string): Promise<string> {
-    const user = await this.repository.findOne(id);
+    const user = await this.repository.findOne({
+      where: {
+        id,
+        status: true,
+      },
+    });
 
     if (mobileMoney === 'Orange') {
       return user.orangeMoney;
@@ -285,6 +318,7 @@ export class UserService {
       where: {
         numero: phoneNumber,
         userType: UserType.COMMERCANT,
+        status: true,
       },
     });
 
@@ -295,6 +329,7 @@ export class UserService {
     const users = await this.repository.find({
       where: {
         expoPushToken: Not(IsNull()),
+        status: true,
       },
     });
     const usersTokens = users.map((user) => user.expoPushToken);
@@ -305,6 +340,7 @@ export class UserService {
     const user = await this.repository.findOne({
       where: {
         referralCode: code,
+        status: true,
       },
     });
     if (user) {
@@ -316,5 +352,13 @@ export class UserService {
     const user = await this.getUserById(id);
     const referalsPoints = user.referralAmountToPoint;
     return referalsPoints;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await this.repository.find({
+      where: {
+        status: true,
+      },
+    });
   }
 }
