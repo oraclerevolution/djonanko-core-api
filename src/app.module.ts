@@ -23,6 +23,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { ReferralsModule } from './referrals/referrals.module';
 import { ForgetPasswordModule } from './forget-password/forget-password.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -38,6 +39,9 @@ import { NotificationsModule } from './notifications/notifications.module';
       password: process.env.TYPEORM_PASSWORD,
       database: process.env.TYPEORM_DATABASE,
       entities: ['dist/**/*.entity{.ts,.js}'],
+      ssl: {
+        rejectUnauthorized: false,
+      },
       synchronize: true,
     }),
     ScheduleModule.forRoot(),
@@ -63,6 +67,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     ReferralsModule,
     ForgetPasswordModule,
     NotificationsModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [AppService],
