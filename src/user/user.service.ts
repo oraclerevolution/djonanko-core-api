@@ -12,13 +12,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { UserAuth } from './enums/user-auth.enum';
 import * as phoneToken from 'generate-sms-verification-code';
-import { SendSmsDto } from './dto/send-sms.dto';
 import { ConfigService } from '@nestjs/config';
-import { AuthType, Infobip } from '@infobip-api/sdk';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FavoriteOperator } from './interfaces/favorite-operator.interface';
 import { UserType } from './enums/user-type.enum';
+import { sendSms } from 'src/libs/sms.lib';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class UserService {
@@ -32,6 +32,7 @@ export class UserService {
     @InjectRepository(User) private readonly repository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly referralsService: ReferralsService,
   ) {}
 
   async register(payload: CreateUserDto): Promise<User> {
@@ -41,13 +42,22 @@ export class UserService {
     user.referralCode = this.generateReferralCode();
     user.salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, user.salt);
+    if (payload.referralCode) {
+      const host = await this.getUserByReferalCode(payload.referralCode);
+      if (host) {
+        await this.referralsService.createReferral({
+          hostId: host.id,
+          guessId: user.id,
+        });
+      }
+    }
 
     try {
       await this.repository.save(user);
       const message =
         'Votre inscription sur Djonanko CI a bien été prise en compte. Merci de profiter pleinenement de nos services en toute sécurité.';
       const phoneNumber = user.numero;
-      await this.sendSMSToUser({ phoneNumber, message });
+      await sendSms({ phoneNumber, message });
       return user;
     } catch (error) {
       console.log('error', error);
@@ -69,12 +79,6 @@ export class UserService {
       );
     }
 
-    if (user.alreadyLogged === true) {
-      throw new BadRequestException(
-        "Connexion impossible, l'utilisateur a déjà effectue une connexion",
-      );
-    }
-
     const hashedPassword = await bcrypt.hash(password, user.salt);
     if (hashedPassword === user.password) {
       const payload = {
@@ -88,9 +92,8 @@ export class UserService {
       if (otp !== 400) {
         const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`;
         const phoneNumber = user.numero;
-        await this.sendSMSToUser({ phoneNumber, message });
+        await sendSms({ phoneNumber, message });
         console.log('otp', otp);
-        this.updateUser(user.id, { alreadyLogged: true });
         return {
           access_token: token,
           user,
@@ -104,10 +107,6 @@ export class UserService {
         'Connexion impossible, vérifiez vos identifiants',
       );
     }
-  }
-
-  logout(userId: number) {
-    return this.repository.update(userId, { alreadyLogged: false });
   }
 
   generateVerificationCode() {
@@ -165,31 +164,6 @@ export class UserService {
 
   async updateUser(id: number, user: UpdateUserDto): Promise<UpdateResult> {
     return await this.repository.update(id, user);
-  }
-
-  async sendSMSToUser(payload: SendSmsDto): Promise<any> {
-    const { phoneNumber, message } = payload;
-    const infobip = new Infobip({
-      baseUrl: this.configService.get<string>('INFOBIP_BASE_URL'),
-      apiKey: this.configService.get<string>('INFOBIP_API_KEY'),
-      authType: AuthType.ApiKey,
-    });
-
-    const response = await infobip.channels.sms.send({
-      messages: [
-        {
-          destinations: [
-            {
-              to: `+225${phoneNumber}`,
-            },
-          ],
-          from: 'Djonanko CI',
-          text: message,
-        },
-      ],
-    });
-
-    return response;
   }
 
   async getUsersPremiums(): Promise<User[]> {
@@ -325,5 +299,22 @@ export class UserService {
     });
     const usersTokens = users.map((user) => user.expoPushToken);
     return usersTokens;
+  }
+
+  async getUserByReferalCode(code: string): Promise<User> {
+    const user = await this.repository.findOne({
+      where: {
+        referralCode: code,
+      },
+    });
+    if (user) {
+      return user;
+    }
+  }
+
+  async getReferralPointsByUserId(id: number): Promise<string> {
+    const user = await this.getUserById(id);
+    const referalsPoints = user.referralAmountToPoint;
+    return referalsPoints;
   }
 }

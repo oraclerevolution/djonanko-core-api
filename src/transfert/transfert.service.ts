@@ -22,6 +22,7 @@ import {
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { Transactions } from 'src/transactions/entities/transactions.entity';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { ReferralsService } from 'src/referrals/referrals.service';
 
 @Injectable()
 export class TransfertService {
@@ -35,6 +36,7 @@ export class TransfertService {
     private readonly configService: ConfigService,
     private readonly transactionService: TransactionsService,
     private readonly notificationsService: NotificationsService,
+    private readonly referralsService: ReferralsService,
   ) {}
 
   async transferInitializer(payload: MakeTransfertDto) {
@@ -367,6 +369,22 @@ export class TransfertService {
           await this.historiqueService.updateHistorique(historique.id, {
             status: TransferType.SUCCESS,
           });
+          //check if user is new
+          const isNewUser = await this.referralsService.getReferralByUserId(
+            getSenderInfos.id,
+          );
+          if (isNewUser.isNew === true) {
+            const host = await this.userService.getUserById(isNewUser.hostId);
+            if (host) {
+              const currentPoint = host.referralAmountToPoint;
+              await this.userService.updateUser(host.id, {
+                referralAmountToPoint: currentPoint + 500,
+              });
+              await this.referralsService.updateReferral(isNewUser.id, {
+                isNew: false,
+              });
+            }
+          }
 
           //notification au sender
           await this.notificationsService.sendNotification(

@@ -1,16 +1,20 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({
-    name: 'referrals'
+  name: 'referrals',
 })
-
 export class Referrals {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    hostId: number;
+  @Column()
+  hostId: number;
 
-    @Column()
-    guessId: number;
+  @Column()
+  guessId: number;
+
+  @Column({
+    default: true,
+  })
+  isNew: boolean;
 }
