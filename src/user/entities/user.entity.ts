@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -10,6 +11,7 @@ import { UserType } from '../enums/user-type.enum';
 @Entity({
   name: 'users',
 })
+@Index(['numero', 'status'])
 export class User {
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -18,9 +20,11 @@ export class User {
   fullname: string;
 
   @Column({ unique: true, nullable: false })
+  @Index()
   numero: string;
 
   @Column({ unique: true, nullable: true })
+  @Index()
   email: string;
 
   @Column({ default: '0' })
@@ -30,6 +34,7 @@ export class User {
   password: string;
 
   @Column({ nullable: true, default: UserType.USER, enum: UserType })
+  @Index()
   userType: UserType;
 
   @Column({ default: false })
@@ -42,6 +47,7 @@ export class User {
   isActive2fa: boolean;
 
   @Column({ nullable: true })
+  @Index()
   isMerchant: boolean;
 
   @Column()
@@ -85,6 +91,10 @@ export class User {
 
   @Column({ nullable: true, default: '0', name: 'referral_amount_to_point' })
   referralAmountToPoint: string;
+
+  @Column({ default: true })
+  @Index()
+  status: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
