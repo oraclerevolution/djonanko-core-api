@@ -138,14 +138,10 @@ export class UserService {
     return referralCode;
   }
 
-  async getUserByPhoneNumber(
-    phoneNumber: string,
-    status?: true,
-  ): Promise<User> {
+  async getUserByPhoneNumber(phoneNumber: string): Promise<User> {
     return await this.repository
       .createQueryBuilder('user')
       .where('user.numero = :phoneNumber', { phoneNumber })
-      .andWhere('user.status = :status', { status })
       .getOne();
   }
 
