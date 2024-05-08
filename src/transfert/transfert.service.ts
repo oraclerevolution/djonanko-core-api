@@ -373,7 +373,7 @@ export class TransfertService {
           const isNewUser = await this.referralsService.getReferralByUserId(
             getSenderInfos.id,
           );
-          if (isNewUser.isNew === true) {
+          if (isNewUser && isNewUser.isNew === true) {
             const host = await this.userService.getUserById(isNewUser.hostId);
             if (host) {
               const currentPoint = host.referralAmountToPoint;
