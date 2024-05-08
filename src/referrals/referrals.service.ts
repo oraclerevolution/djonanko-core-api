@@ -18,7 +18,7 @@ export class ReferralsService {
   async getReferralByUserId(userId: number): Promise<Referrals> {
     return await this.repository.findOne({
       where: {
-        userId,
+        guessId: userId,
       },
     });
   }
