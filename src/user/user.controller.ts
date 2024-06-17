@@ -38,6 +38,18 @@ export class UserController {
   }
 
   @UseGuards(FullAuthGuard)
+  @Get('user-infos-by-id')
+  async userById(@Query('id') id: number): Promise<User> {
+    return await this.userService.getUserById(id);
+  }
+
+  @UseGuards(FullAuthGuard)
+  @Get('change-premium-status')
+  async changePremiumStatus(): Promise<User[]> {
+    return await this.userService.changePremiumStatus();
+  }
+
+  @UseGuards(FullAuthGuard)
   @Get('user-balance')
   async userBalance(@Query('phoneNumber') phoneNumber: string): Promise<User> {
     const user = await this.userService.getUserByPhoneNumber(phoneNumber);

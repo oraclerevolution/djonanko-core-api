@@ -6,11 +6,12 @@ import { CreateCollectDto } from './dto/create-collect.dto';
 
 @Injectable()
 export class CompteCollecteService {
-    constructor(
-        @InjectRepository(CompteCollect) private readonly repository: Repository<CompteCollect>,
-    ){}
+  constructor(
+    @InjectRepository(CompteCollect)
+    private readonly repository: Repository<CompteCollect>,
+  ) {}
 
-    createCompteCollect(compteCollect: CreateCollectDto): Promise<CompteCollect> {
-        return this.repository.save(compteCollect);
-    }
+  createCompteCollect(compteCollect: CreateCollectDto): Promise<CompteCollect> {
+    return this.repository.save(compteCollect);
+  }
 }
