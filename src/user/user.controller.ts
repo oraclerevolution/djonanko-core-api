@@ -31,6 +31,11 @@ export class UserController {
     return await this.userService.login(payload);
   }
 
+  @Get('resend-otp')
+  async resendOtp(@Query('phoneNumber') phoneNumber: string) {
+    return await this.userService.resendOtp(phoneNumber);
+  }
+
   @UseGuards(FullAuthGuard)
   @Get('user-infos-by-number')
   async userInfos(@Query('phoneNumber') phoneNumber: string): Promise<User> {
