@@ -6,15 +6,21 @@ import { CreateCompteReservationDto } from './dto/create-compte-reservation.dto'
 
 @Injectable()
 export class CompteReservationService {
-    constructor(
-        @InjectRepository(CompteReservation) private readonly repository: Repository<CompteReservation>,
-    ) {}
+  constructor(
+    @InjectRepository(CompteReservation)
+    private readonly repository: Repository<CompteReservation>,
+  ) {}
 
-    async createCompteReservation(compteReservation: CreateCompteReservationDto): Promise<CompteReservation> {
-        return this.repository.save(compteReservation);
-    }
+  async createCompteReservation(
+    compteReservation: CreateCompteReservationDto,
+  ): Promise<CompteReservation> {
+    return await this.repository.save(compteReservation);
+  }
 
-    async updateCompteReservation(id: string, compteReservation: Partial<CompteReservation>): Promise<UpdateResult> {
-        return this.repository.update(id, compteReservation);
-    }
+  async updateCompteReservation(
+    id: string,
+    compteReservation: Partial<CompteReservation>,
+  ): Promise<UpdateResult> {
+    return await this.repository.update(id, compteReservation);
+  }
 }
