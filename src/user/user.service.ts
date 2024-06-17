@@ -357,4 +357,20 @@ export class UserService {
       },
     });
   }
+
+  async resendOtp(number: string): Promise<any> {
+    const user = await this.getUserByPhoneNumber(number);
+    const otp = this.generateVerificationCode();
+    if (otp !== 400) {
+      const message = `Une tentative de connexion à votre compte vient d'être détectée. Veuillez saisir le code suivant : ${otp}. S'il ne s'agit pas de vous contactez le service support.`;
+      const phoneNumber = user.numero;
+      await sendSms({ phoneNumber, message });
+      console.log('otp', otp);
+      return {
+        otp,
+      };
+    } else {
+      throw new BadRequestException('Please retry login process');
+    }
+  }
 }
