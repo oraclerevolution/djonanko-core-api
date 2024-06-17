@@ -73,6 +73,9 @@ export class TransfertService {
         transfer.amountBeforeSending = getSenderInfos.solde;
         transfer.reference = this.generateReference();
         transfer.amountAfterSending = balanceAfterSending.toString();
+        transfer.amountAfterReceiving = (
+          parseInt(getReceiverInfos.solde) + parseInt(amount)
+        ).toString();
         transfer.senderPhoneNumber = senderPhoneNumber;
         transfer.receiverPhoneNumber = receiverPhoneNumber;
         transfer.status = TransferType.FAILED;
@@ -124,6 +127,9 @@ export class TransfertService {
         transfer.reference = this.generateReference();
         transfer.amountAfterSending = balanceAfterSending.toString();
         transfer.senderPhoneNumber = senderPhoneNumber;
+        transfer.amountAfterReceiving = (
+          parseInt(getReceiverInfos.solde) + parseInt(amount)
+        ).toString();
         transfer.receiverPhoneNumber = receiverPhoneNumber;
 
         const transaction = await this.transactionService.createTransaction({
@@ -173,6 +179,9 @@ export class TransfertService {
         transfer.amountBeforeSending = getSenderInfos.solde;
         transfer.reference = this.generateReference();
         transfer.amountAfterSending = balanceAfterSending.toString();
+        transfer.amountAfterReceiving = (
+          parseInt(getReceiverInfos.solde) + parseInt(amount)
+        ).toString();
         transfer.senderPhoneNumber = senderPhoneNumber;
         transfer.receiverPhoneNumber = receiverPhoneNumber;
         await this.repository.save(transfer);

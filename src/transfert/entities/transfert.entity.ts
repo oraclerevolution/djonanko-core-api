@@ -1,45 +1,53 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { TransactionType } from "../enums/transfer-type.enum";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { TransactionType } from '../enums/transfer-type.enum';
 
 @Entity({
-    name: 'transfert'
+  name: 'transfert',
 })
-
 export class Transfert {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    amount: string;
+  @Column()
+  amount: string;
 
-    @Column({name: 'amount_before_sending'})
-    amountBeforeSending: string;
+  @Column({ name: 'amount_before_sending' })
+  amountBeforeSending: string;
 
-    @Column({name: 'amount_after_sending'})
-    amountAfterSending: string;
+  @Column({ name: 'amount_after_sending' })
+  amountAfterSending: string;
 
-    @Column({name: 'sender_phone_number'})
-    senderPhoneNumber: string;
+  @Column({ name: 'amount_after_receiving', default: null })
+  amountAfterReceiving: string;
 
-    @Column({name: 'reference'})
-    reference: string;
+  @Column({ name: 'sender_phone_number' })
+  senderPhoneNumber: string;
 
-    @Column({name: 'receiver_phone_number'})
-    receiverPhoneNumber: string;
+  @Column({ name: 'reference' })
+  reference: string;
 
-    @Column({name: 'fees'})
-    fees: string;
+  @Column({ name: 'receiver_phone_number' })
+  receiverPhoneNumber: string;
 
-    @Column({
-        type: 'enum',
-        enum: TransactionType,
-        default: TransactionType.PENDING
-    })
-    status: string;
+  @Column({ name: 'fees' })
+  fees: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @Column({
+    type: 'enum',
+    enum: TransactionType,
+    default: TransactionType.PENDING,
+  })
+  status: string;
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
