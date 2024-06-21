@@ -47,6 +47,18 @@ export class TransfertService {
     const getReceiverInfos = await this.userService.getUserByPhoneNumber(
       receiverPhoneNumber,
     );
+    if(senderPhoneNumber === receiverPhoneNumber) {
+      return {
+        transfer: null,
+        amount,
+        historique: null,
+        transaction: null,
+        fees: null,
+        senderInfos: null,
+        status: TransactionResponse.SAME_NUMBER,
+        receiverNumber: receiverPhoneNumber,
+      };
+    }
     if (getReceiverInfos === undefined) {
       return {
         transfer: null,
